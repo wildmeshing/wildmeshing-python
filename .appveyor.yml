@@ -11,13 +11,13 @@ environment:
   matrix:
   - config: Release
     PYTHON: "C:\\Python36-x64"
-    PYTHON_VERSION: "3.6.x" # currently 3.6.8
+    PYTHON_VERSION: "3.6" # currently 3.6.8
     PYTHON_ARCH: "64"
     MINICONDA: C:\Miniconda3
 
   - config: Release
     PYTHON: "C:\\Python35-x64"
-    PYTHON_VERSION: "3.5.x" # currently 3.5.8
+    PYTHON_VERSION: "3.5" # currently 3.5.8
     PYTHON_ARCH: "64"
     MINICONDA: C:\Miniconda3
 init:
@@ -26,6 +26,8 @@ on_finish:
   - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 install:
   - "SET PATH=%MINICONDA%;%MINICONDA%\\Scripts;%PATH%"
+  - "conda create --name wildmeshing python=%PYTHON_VERSION% -y"
+  - "conda activate wildmeshing"
   - "python --version"
   - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
   - "conda install numpy -y"
@@ -35,6 +37,7 @@ build:
   parallel: true
 build_script:
   - "SET PATH=%MINICONDA%;%MINICONDA%\\Scripts;%PATH%"
+  - "conda activate wildmeshing"
   - cd c:\projects\wildmeshing
   - "python --version"
   - python setup.py build --debug install

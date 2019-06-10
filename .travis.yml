@@ -12,7 +12,7 @@ addons:
     packages:
     - gcc-7
     - g++-7
-    - gmp
+    - libgmp3-dev
 env:
   - CC=gcc-7 && CXX=g++-7
 install:
