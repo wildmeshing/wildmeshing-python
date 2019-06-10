@@ -19,5 +19,6 @@ install:
   - pip install numpy
 script:
   - python setup.py build --debug install
+  - ls wildmeshing
   - python test/tri_test.py
   - python test/tet_test.py

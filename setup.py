@@ -84,7 +84,7 @@ setup(
     packages=find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: MIT License"
+        "License :: OSI Approved :: MPL-2.0 License"
     ],
     test_suite="test"
 )
