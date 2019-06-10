@@ -48,6 +48,10 @@ include(WildMeshingDependencies)
 wildmeshing_download_triwild()
 add_subdirectory(${THIRD_PARTY_DIR}/triwild)
 
+
+wildmeshing_download_tetwild()
+add_subdirectory(${THIRD_PARTY_DIR}/tetwild)
+
 # pybind11
 wildmeshing_download_pybind11()
 add_subdirectory(${THIRD_PARTY_DIR}/pybind11)
@@ -63,6 +67,7 @@ add_subdirectory(${THIRD_PARTY_DIR}/pybind11)
 add_library(wildmeshing MODULE src/binding.cpp)
 target_include_directories(wildmeshing PRIVATE ${THIRD_PARTY_DIR}/triwild/src)
 target_link_libraries(wildmeshing PRIVATE triwild_lib)
+target_link_libraries(wildmeshing PRIVATE FloatTetwild)
 target_link_libraries(wildmeshing PRIVATE pybind11::module)
 set_target_properties(wildmeshing PROPERTIES PREFIX "${PYTHON_MODULE_PREFIX}" SUFFIX "${PYTHON_MODULE_EXTENSION}")
 

@@ -41,4 +41,5 @@ build_script:
 
 test_script:
   - cd c:\projects\wildmeshing
-  - python test/test.py
+  - python test/tri_test.py
+  - python test/tet_test.py
