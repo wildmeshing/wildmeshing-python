@@ -38,13 +38,6 @@ function(wildmeshing_download_tetwild)
     )
 endfunction()
 
-# function(wildmeshing_download_tetwild)
-#     wildmeshing_download_project(tetwild
-#         URL      https://www.dropbox.com/s/ev6njh3kxllz2vy/code.tar.gz?dl=0
-#         URL_MD5  7aad84a90688bd4fe897e65d5c35fba6
-#     )
-# endfunction()
-
 function(wildmeshing_download_pybind11)
     wildmeshing_download_project(pybind11
         GIT_REPOSITORY https://github.com/pybind/pybind11.git
