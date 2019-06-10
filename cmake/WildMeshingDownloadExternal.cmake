@@ -27,14 +27,14 @@ endfunction()
 function(wildmeshing_download_triwild)
     wildmeshing_download_project(triwild
         GIT_REPOSITORY https://github.com/wildmeshing/TriWild/
-        GIT_TAG         b2f4224818aa8a2bf1a9109c479f847a17c547af
+        GIT_TAG         ef32701b6608fc750fd08abad3474c91b71caee2
     )
 endfunction()
 
 function(wildmeshing_download_tetwild)
     wildmeshing_download_project(tetwild
         URL      https://www.dropbox.com/s/nen24j1lgn49p7h/code.zip?dl=0
-        URL_MD5  c54deb4844df8b45abb2303eae636f1f
+        URL_MD5  b5a7c248db7a8beeda1927b8c3dfb6d5
     )
 endfunction()
 
