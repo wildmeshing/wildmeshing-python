@@ -6,8 +6,8 @@ shallow_clone: true
 branches:
   only:
     - master
-environment:
-  APPVEYOR_RDP_PASSWORD: wmsh.paAss126.
+# environment:
+#   APPVEYOR_RDP_PASSWORD: wmsh.paAss126.
   matrix:
   - config: Release
     PYTHON: "C:\\Python36-x64"
@@ -20,12 +20,12 @@ environment:
     PYTHON_VERSION: "3.5.x" # currently 3.5.8
     PYTHON_ARCH: "64"
     MINICONDA: C:\Miniconda3-x64
-init:
-  - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
-on_finish:
-  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+# init:
+#   - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+# on_finish:
+#   - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 install:
-  - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%MINICONDA%\\Scripts;%MINICONDA%\\Library\\include;%MINICONDA%\\Library\\lib;%PATH%"
+  - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%MINICONDA%\\Scripts;%MINICONDA%\\Library\\include;%MINICONDA%\\Library\\lib;%MINICONDA%\\Library\\bin;%PATH%"
   - "python --version"
   - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
   - "python -m pip install numpy"
@@ -34,7 +34,7 @@ install:
 build:
   parallel: true
 build_script:
-  - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%MINICONDA%\\Scripts;%MINICONDA%\\Library\\include;%MINICONDA%\\Library\\lib;%PATH%"
+  - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%MINICONDA%\\Scripts;%MINICONDA%\\Library\\include;%MINICONDA%\\Library\\lib;%MINICONDA%\\Library\\bin;%PATH%"
   - cd c:\projects\wildmeshing
   - "python --version"
   - python -m pip install . -vv
