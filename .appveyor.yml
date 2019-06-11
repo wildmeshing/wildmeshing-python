@@ -6,7 +6,7 @@ shallow_clone: true
 branches:
   only:
     - master
-# environment:
+environment:
 #   APPVEYOR_RDP_PASSWORD: wmsh.paAss126.
   matrix:
   - config: Release
