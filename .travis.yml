@@ -18,7 +18,7 @@ env:
 install:
   - pip install numpy
 script:
-  - python setup.py build --debug install
+  - python -m pip install . -vv
   - ls wildmeshing
   - python test/tri_test.py
   - python test/tet_test.py
