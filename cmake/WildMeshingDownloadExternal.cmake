@@ -34,7 +34,7 @@ endfunction()
 function(wildmeshing_download_tetwild)
     wildmeshing_download_project(tetwild
         URL      https://www.dropbox.com/s/nen24j1lgn49p7h/code.zip?dl=0
-        URL_MD5  b5a7c248db7a8beeda1927b8c3dfb6d5
+        URL_MD5  03a41b34563092d3879002664830c538
     )
 endfunction()
 
