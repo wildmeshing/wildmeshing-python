@@ -388,7 +388,7 @@ PYBIND11_MODULE(wildmeshing, m) {
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
             std::vector<Vector3> input_vertices;
-            std::vector<Vector3i> input_faces;
+            std::vector<floatTetWild::Vector3i> input_faces;
             std::vector<int> input_tags;
 
             if(!params.tag_path.empty()) {

@@ -1,2 +1,8 @@
 3rdparty
 build
+
+.vscode
+*.egg-info
+__pycache__
+*.code-workspace
+*.so
