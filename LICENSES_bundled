@@ -39,3 +39,27 @@ License: MIT
 Name: tbb
 Files: https://github.com/wjakob/tbb/blob/master/LICENSE
 License: Apache-2.0
+
+Name: stdint
+Files: https://github.com/alicevision/geogram/blob/0ac4a5889f8eaef9372b888126deec2334128158/src/lib/geogram/third_party/pstdint.h
+License: BSD
+
+Name: LM6
+Files: https://github.com/alicevision/geogram/blob/0ac4a5889f8eaef9372b888126deec2334128158/src/lib/geogram/third_party/LM7/copyright.txt
+License: LGPL
+
+Name: rply
+Files: https://github.com/alicevision/geogram/blob/0ac4a5889f8eaef9372b888126deec2334128158/src/lib/geogram/third_party/rply/LICENSE
+License: MIT
+
+Name: zlib
+Files: https://github.com/alicevision/geogram/blob/0ac4a5889f8eaef9372b888126deec2334128158/src/lib/geogram/third_party/zlib/LICENSE
+License: MIT
+
+Name: gzstream
+Files: https://github.com/alicevision/geogram/blob/0ac4a5889f8eaef9372b888126deec2334128158/src/lib/geogram/third_party/gzstream/COPYING.LIB
+License: LGPL
+
+Name: Screened Poisson Surface Reconstruction
+Files: https://github.com/alicevision/geogram/blob/0ac4a5889f8eaef9372b888126deec2334128158/src/lib/geogram/third_party/PoissonRecon/LICENSE.txt
+License: MIT
