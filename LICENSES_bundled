@@ -1,0 +1,41 @@
+The Wildmeshing repository and source distributions bundle a number of libraries that
+are compatibly licensed.  We list these here.
+
+Name: triwild
+Files: https://github.com/wildmeshing/TriWild/blob/master/LICENSE.MPL2
+License: MPL2
+
+Name: tetwild
+License: MPL2
+
+Name: pybind11
+Files: https://github.com/pybind/pybind11/blob/master/LICENSE
+License: BSD
+
+Name: aabbcc
+Files: https://github.com/Yixin-Hu/aabbcc/blob/master/LICENSE
+License: zlib
+
+Name: cli11
+Files: https://github.com/CLIUtils/CLI11/blob/master/LICENSE
+License: 3-Clause BSD
+
+Name: geogram
+Files: http://alice.loria.fr/software/geogram/doc/html/geogram_license.html
+License: 3-clause BSD
+
+Name: libigl
+Files: https://github.com/libigl/libigl/blob/master/LICENSE.GPL
+License: MPL2
+
+Name: nlopt
+Files: https://github.com/gabime/spdlog/blob/v1.x/LICENSE
+License: MIT (we use only Sbplx)
+
+Name: spdlog
+Files: https://nlopt.readthedocs.io/en/latest/NLopt_License_and_Copyright/
+License: MIT
+
+Name: tbb
+Files: https://github.com/wjakob/tbb/blob/master/LICENSE
+License: Apache-2.0
