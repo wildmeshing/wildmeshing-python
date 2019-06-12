@@ -29,11 +29,11 @@ Files: https://github.com/libigl/libigl/blob/master/LICENSE.GPL
 License: MPL2
 
 Name: nlopt
-Files: https://github.com/gabime/spdlog/blob/v1.x/LICENSE
+Files: https://nlopt.readthedocs.io/en/latest/NLopt_License_and_Copyright/
 License: MIT (we use only Sbplx)
 
 Name: spdlog
-Files: https://nlopt.readthedocs.io/en/latest/NLopt_License_and_Copyright/
+Files: https://github.com/gabime/spdlog/blob/v1.x/LICENSE
 License: MIT
 
 Name: tbb
