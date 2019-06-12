@@ -90,6 +90,7 @@ PYBIND11_MODULE(wildmeshing, m) {
             args.input = input;
             // args.postfix = postfix;
             args.feature_input = feature_input;
+            args.output = output;
             args.stop_quality = stop_quality;
             args.max_its = max_its;
             args.stage = stage;

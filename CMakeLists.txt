@@ -58,7 +58,7 @@ add_subdirectory(${THIRD_PARTY_DIR}/pybind11)
 
 
 #for testing purpose
-# wildmeshing_download_data()
+wildmeshing_download_data()
 
 
 ################################################################################

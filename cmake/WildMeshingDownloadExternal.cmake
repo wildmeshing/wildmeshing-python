@@ -45,10 +45,10 @@ function(wildmeshing_download_pybind11)
     )
 endfunction()
 
-## data
-# function(wildmeshing_download_data)
-#     wildmeshing_download_project(data
-#         GIT_REPOSITORY xxx
-#         GIT_TAG        xxx
-#     )
-# endfunction()
+# data
+function(wildmeshing_download_data)
+    wildmeshing_download_project(data
+        GIT_REPOSITORY https://github.com/wildmeshing/data.git
+        GIT_TAG        d3127d319c99a1af72d2b34eb8f589158d073376
+    )
+endfunction()
