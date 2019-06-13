@@ -1,3 +1,71 @@
+The Wildmeshing repository and source distributions bundle a number of libraries that
+are compatibly licensed.  We list these here. The main license is at the end
+
+Name: triwild
+Files: https://github.com/wildmeshing/TriWild/blob/master/LICENSE.MPL2
+License: MPL2
+
+Name: tetwild
+License: MPL2
+
+Name: pybind11
+Files: https://github.com/pybind/pybind11/blob/master/LICENSE
+License: BSD
+
+Name: aabbcc
+Files: https://github.com/Yixin-Hu/aabbcc/blob/master/LICENSE
+License: zlib
+
+Name: cli11
+Files: https://github.com/CLIUtils/CLI11/blob/master/LICENSE
+License: 3-Clause BSD
+
+Name: geogram
+Files: http://alice.loria.fr/software/geogram/doc/html/geogram_license.html
+License: 3-clause BSD
+
+Name: libigl
+Files: https://github.com/libigl/libigl/blob/master/LICENSE.GPL
+License: MPL2
+
+Name: nlopt
+Files: https://nlopt.readthedocs.io/en/latest/NLopt_License_and_Copyright/
+License: MIT (we use only Sbplx)
+
+Name: spdlog
+Files: https://github.com/gabime/spdlog/blob/v1.x/LICENSE
+License: MIT
+
+Name: tbb
+Files: https://github.com/wjakob/tbb/blob/master/LICENSE
+License: Apache-2.0
+
+Name: stdint
+Files: https://github.com/alicevision/geogram/blob/0ac4a5889f8eaef9372b888126deec2334128158/src/lib/geogram/third_party/pstdint.h
+License: BSD
+
+Name: LM6
+Files: https://github.com/alicevision/geogram/blob/0ac4a5889f8eaef9372b888126deec2334128158/src/lib/geogram/third_party/LM7/copyright.txt
+License: LGPL
+
+Name: rply
+Files: https://github.com/alicevision/geogram/blob/0ac4a5889f8eaef9372b888126deec2334128158/src/lib/geogram/third_party/rply/LICENSE
+License: MIT
+
+Name: zlib
+Files: https://github.com/alicevision/geogram/blob/0ac4a5889f8eaef9372b888126deec2334128158/src/lib/geogram/third_party/zlib/LICENSE
+License: MIT
+
+Name: gzstream
+Files: https://github.com/alicevision/geogram/blob/0ac4a5889f8eaef9372b888126deec2334128158/src/lib/geogram/third_party/gzstream/COPYING.LIB
+License: LGPL
+
+Name: Screened Poisson Surface Reconstruction
+Files: https://github.com/alicevision/geogram/blob/0ac4a5889f8eaef9372b888126deec2334128158/src/lib/geogram/third_party/PoissonRecon/LICENSE.txt
+License: MIT
+
+
+
 Mozilla Public License Version 2.0
 ==================================
 

@@ -502,7 +502,7 @@ PYBIND11_MODULE(wildmeshing, m) {
                 fout << Statistics::stats();
             fout.close();
     },
-    "Robust Tetrahedralization",
+    "Robust Tetrahedralization, this is an alpha developement version of TetWild. For a stable release refer to the C++ version https://github.com/Yixin-Hu/TetWild",
     py::arg("input"), // "Input surface mesh INPUT in .off/.obj/.stl/.ply format. (string, required)"
     // py::arg("postfix") = "" //"Add postfix into outputs' file name"
     py::arg("output") = "", // "Output tetmesh OUTPUT in .msh format. (string, optional, default: input_file+postfix+'.msh')"
