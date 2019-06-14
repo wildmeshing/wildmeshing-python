@@ -18,7 +18,7 @@ env:
 install:
   - pip install numpy
 script:
-  - python -m pip install . -vv
+  - python setup.py build --debug install
   - ls ./
   - ls 3rdparty
   - ls 3rdparty\data
