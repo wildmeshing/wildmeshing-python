@@ -62,6 +62,6 @@ endfunction()
 function(wildmeshing_download_data)
     wildmeshing_download_project(data
         GIT_REPOSITORY https://github.com/wildmeshing/data.git
-        GIT_TAG        d3127d319c99a1af72d2b34eb8f589158d073376
+        GIT_TAG        8d194cd9b0b7db1de67d40114aa8799664e93e60
     )
 endfunction()

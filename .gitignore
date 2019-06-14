@@ -7,4 +7,4 @@ wildmeshing/parse_svg
 __pycache__
 *.code-workspace
 *.so
-*.msh
+*.msh*
