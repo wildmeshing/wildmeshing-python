@@ -19,6 +19,8 @@ install:
   - pip install numpy
 script:
   - python -m pip install . -vv
-  - ls wildmeshing
+  - ls ./
+  - ls 3rdparty
+  - ls 3rdparty\data
   - python test/tri_test.py
   - python test/tet_test.py

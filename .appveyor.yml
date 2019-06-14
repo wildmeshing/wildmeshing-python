@@ -41,5 +41,7 @@ build_script:
 
 test_script:
   - cd c:\projects\wildmeshing
+  - ls 3rdparty
+  - ls 3rdparty\data
   - python test/tri_test.py
   - python test/tet_test.py
