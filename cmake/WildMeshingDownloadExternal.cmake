@@ -23,11 +23,24 @@ endfunction()
 
 ################################################################################
 
+# Download SVG parse
+function(wildmeshing_download_svg_parser)
+    download_project(
+        PROJ         parse_svg
+        SOURCE_DIR   ${CMAKE_CURRENT_SOURCE_DIR}/wildmeshing/parse_svg
+        DOWNLOAD_DIR ${THIRD_PARTY_DIR}/.cache/parse_svg
+        QUIET
+        ${WILDMESHING_EXTRA_OPTIONS}
+        GIT_REPOSITORY  https://github.com/teseoch/svgpathtools.git
+        GIT_TAG         b920779788948655d2985de19acad5133b5125d8
+    )
+endfunction()
+
 
 function(wildmeshing_download_triwild)
     wildmeshing_download_project(triwild
         GIT_REPOSITORY https://github.com/wildmeshing/TriWild/
-        GIT_TAG         a563fd98945f39d0bab8ac38ec37c201b79aac5e
+        GIT_TAG         85814cec8eccd77ef0c9f582afef71f1d6e5f6bb
     )
 endfunction()
 
