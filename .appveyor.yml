@@ -9,13 +9,13 @@ branches:
 environment:
 #   APPVEYOR_RDP_PASSWORD: wmsh.paAss126.
   matrix:
-  - config: Release
+  - config: Debug
     PYTHON: "C:\\Python36-x64"
     PYTHON_VERSION: "3.6.x" # currently 3.6.8
     PYTHON_ARCH: "64"
     MINICONDA: C:\Miniconda3-x64
 
-  - config: Release
+  - config: Debug
     PYTHON: "C:\\Python35-x64"
     PYTHON_VERSION: "3.5.x" # currently 3.5.8
     PYTHON_ARCH: "64"
