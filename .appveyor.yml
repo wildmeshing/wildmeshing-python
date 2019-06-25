@@ -27,7 +27,7 @@ environment:
 install:
   # - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%MINICONDA%\\Scripts;%MINICONDA%\\Library\\include;%MINICONDA%\\Library\\lib;%MINICONDA%\\Library\\bin;%PATH%"
   - "set PATH=%MINICONDA%;%MINICONDA%\\Scripts;%PATH%"
-  - "conda create -q -n wildmeshing python=%PYTHON_VERSION%"
+  - "conda create -q -n wildmeshing python=%PYTHON_VERSION% -y"
   - "activate wildmeshing"
   - "python --version"
   - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
