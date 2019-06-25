@@ -17,6 +17,7 @@ env:
   - CC=gcc-7 && CXX=g++-7
 install:
   - pip install numpy
+  - pip install svgwrite
 script:
   - python setup.py build --debug install
   - python test/tri_test.py

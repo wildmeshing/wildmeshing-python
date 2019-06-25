@@ -24,11 +24,11 @@ class TriangulateTest(unittest.TestCase):
 
         wm.triangulate(mesh_path, feature_path, output="tri_test_with", skip_eps=True, mute_log=True)
 
-    # def test_svg(self):
-    #     root_folder = os.path.join("..", "3rdparty", "data")
-    #     dir_path = os.path.dirname(os.path.realpath(__file__))
-    #     svg_path = os.path.join(dir_path, root_folder, "rocket.svg", mute_log=True)
-    #     wm.triangulate_svg(svg_path)
+    def test_svg(self):
+        root_folder = os.path.join("..", "3rdparty", "data")
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+        svg_path = os.path.join(dir_path, root_folder, "rocket.svg")
+        wm.triangulate_svg(svg_path, mute_log=True)
 
 
 if __name__ == '__main__':

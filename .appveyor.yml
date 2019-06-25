@@ -30,6 +30,7 @@ install:
   - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
   - "python -m pip install numpy"
   - "conda install -c conda-forge mpir -y"
+  - "conda install -c conda-forge svgwrite -y"
   - "python -c \"import numpy as np;import sys;print(np.get_include())\""
 build:
   parallel: true
