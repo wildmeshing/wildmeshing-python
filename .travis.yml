@@ -16,9 +16,19 @@ addons:
 env:
   - CC=gcc-7 && CXX=g++-7
 install:
-  - pip install numpy
-  - pip install svgwrite
+  - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - export PATH="$HOME/miniconda/bin:$PATH"
+  - hash -r
+  - conda config --set always_yes yes --set changeps1 no
+  - conda info -a
+  - conda create -q -n wildmeshing python=$TRAVIS_PYTHON_VERSION -y
+  - source activate wildmeshing
+  - conda install numpy -y
+  - conda install -c conda-forge mpir -y
+  - conda install -c conda-forge svgwrite -y
 script:
+  - source activate wildmeshing
   - python setup.py build --debug install
   - python test/tri_test.py
   - python test/tet_test.py
