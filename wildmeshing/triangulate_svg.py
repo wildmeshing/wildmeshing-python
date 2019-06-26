@@ -209,7 +209,7 @@ def convert_svg(input_svg):
                     vertices += [[xy[0], xy[1]]]
 
                     if iprev:
-                        lines += [[iprev, v_index]]
+                        lines += [[iprev-1, v_index-1]]
 
                     iprev = v_index
 
