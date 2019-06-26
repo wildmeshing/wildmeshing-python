@@ -42,7 +42,7 @@ endif()
 # Setup dependencies
 include(WildMeshingDependencies)
 
-wildmeshing_download_svg_parser()
+# wildmeshing_download_svg_parser()
 
 # triwild
 wildmeshing_download_triwild()

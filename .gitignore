@@ -1,6 +1,5 @@
 3rdparty
 build
-wildmeshing/parse_svg
 
 .vscode
 *.egg-info

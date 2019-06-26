@@ -1,0 +1,3 @@
+[submodule "wildmeshing/parse_svg"]
+	path = wildmeshing/parse_svg
+	url = https://github.com/teseoch/svgpathtools.git
