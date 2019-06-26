@@ -24,37 +24,24 @@ environment:
 #   - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 # on_finish:
 #   - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
-# install:
-#   # - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%MINICONDA%\\Scripts;%MINICONDA%\\Library\\include;%MINICONDA%\\Library\\lib;%MINICONDA%\\Library\\bin;%PATH%"
-#   - "set PATH=%MINICONDA%;%MINICONDA%\\Scripts;%PATH%"
-#   - "conda create -q -n wildmeshing python=%PYTHON_VERSION% -y"
-#   - "activate wildmeshing"
-#   - "python --version"
-#   - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
-#   - "conda install numpy -y"
-#   - "conda install -c conda-forge mpir -y"
-#   - "conda install -c conda-forge svgwrite -y"
-#   - "python -c \"import numpy as np;import sys;print(np.get_include())\""
-build:
-  parallel: true
-build_script:
-  # - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%MINICONDA%\\Scripts;%MINICONDA%\\Library\\include;%MINICONDA%\\Library\\lib;%MINICONDA%\\Library\\bin;%PATH%"
-  - "set PATH=%MINICONDA%;%MINICONDA%\\Scripts;%PATH%"
-  - "conda create -q -n wildmeshing python=%PYTHON_VERSION% -y"
-  - "activate wildmeshing"
+install:
+  - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%MINICONDA%\\Scripts;%MINICONDA%\\Library\\include;%MINICONDA%\\Library\\lib;%MINICONDA%\\Library\\bin;%PATH%"
   - "python --version"
   - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
   - "conda install numpy -y"
   - "conda install -c conda-forge mpir -y"
   - "conda install -c conda-forge svgwrite -y"
   - "python -c \"import numpy as np;import sys;print(np.get_include())\""
+build:
+  parallel: true
+build_script:
+  - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%MINICONDA%\\Scripts;%MINICONDA%\\Library\\include;%MINICONDA%\\Library\\lib;%MINICONDA%\\Library\\bin;%PATH%"
   - cd c:\projects\wildmeshing
   - "python --version"
   - python setup.py build --debug install
-#
-# test_script:
-  # - "set PATH=%MINICONDA%;%MINICONDA%\\Scripts;%PATH%"
-  # - "activate wildmeshing"
+
+test_script:
+  - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%MINICONDA%\\Scripts;%MINICONDA%\\Library\\include;%MINICONDA%\\Library\\lib;%MINICONDA%\\Library\\bin;%PATH%"
   - cd c:\projects\wildmeshing
   - "python --version"
   - python test/tri_test.py
