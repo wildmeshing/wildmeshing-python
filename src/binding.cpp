@@ -164,11 +164,12 @@ m.def("triangulate_data", [](const Eigen::MatrixXd &V, const Eigen::MatrixXi &E,
             double curving_time = 0;
             double cut_and_hole_time = 0;
 
-
+#ifndef WIN32
             if (args.mute_log) {
                 std::streambuf *orig_buf = cout.rdbuf();
                 cout.rdbuf(NULL);
             }
+#endif
 
             // if (args.output == "")
                 // args.output = args.input + "_" + args.postfix;
