@@ -2,7 +2,7 @@ version: 1.0.{build}
 os: Visual Studio 2017
 platform: x64
 clone_folder: C:\projects\wildmeshing
-shallow_clone: true
+shallow_clone: false
 branches:
   only:
     - master
@@ -37,7 +37,6 @@ build:
 build_script:
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%MINICONDA%\\Scripts;%MINICONDA%\\Library\\include;%MINICONDA%\\Library\\lib;%MINICONDA%\\Library\\bin;%PATH%"
   - cd c:\projects\wildmeshing
-  - git submodule update --init --recursive
   - "python --version"
   - python setup.py build --debug install
 
