@@ -37,6 +37,7 @@ build:
 build_script:
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%MINICONDA%\\Scripts;%MINICONDA%\\Library\\include;%MINICONDA%\\Library\\lib;%MINICONDA%\\Library\\bin;%PATH%"
   - cd c:\projects\wildmeshing
+  - git submodule update --init --recursive
   - "python --version"
   - python setup.py build --debug install
 
