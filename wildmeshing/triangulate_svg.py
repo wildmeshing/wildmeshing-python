@@ -193,6 +193,7 @@ def convert_svg(input_svg):
 
             first = False
 
+
             for piece in pieces:
                 ts = compute_samples(piece)
 
