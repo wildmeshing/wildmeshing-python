@@ -31,6 +31,10 @@ def triangulate_svg(svg_path,
          mute_log
     )
 
+    assert (F_out.shape[0] == len(F_nodes))
+    for i in range(len(F_nodes)):
+        F_nodes[i] = F_out[i, :].tolist() + F_nodes[i]
+
     return V_out, F_out, nodes, F_nodes
 
 
