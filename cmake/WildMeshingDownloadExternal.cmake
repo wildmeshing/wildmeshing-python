@@ -27,7 +27,7 @@ endfunction()
 function(wildmeshing_download_triwild)
     wildmeshing_download_project(triwild
         GIT_REPOSITORY  https://github.com/wildmeshing/TriWild.git
-        GIT_TAG         94b9fa0b931dcf343fc1b02d230b069c4c8d1e9c
+        GIT_TAG         f0c1b8c458e7a3e9d82d47c64fd1329ec141e792
     )
 endfunction()
 
