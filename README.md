@@ -1,6 +1,6 @@
 # Wildmeshing python bindings
 
-python interface to **triangulate** and **tetrahelize**
+python interface to **triangulate** and **tetrahedralize**
 
 use:
 
