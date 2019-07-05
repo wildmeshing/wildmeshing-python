@@ -16,9 +16,13 @@ def triangulate_svg(svg_path,
         flat_feature_angle = 10.,
         cut_outside = False,
         skip_eps = False,
-        hole_file = "",
+        hole_pts = None,
         mute_log = False):
+    print("call1")
     vertices, lines, json = convert_svg(svg_path)
+
+    if hole_pts is None:
+        hole_pts = np.array([])
 
     V_out, F_out, nodes, F_nodes = triangulate_data(vertices, lines, json,
     stop_quality,  max_its,  stage,
@@ -27,7 +31,7 @@ def triangulate_svg(svg_path,
          flat_feature_angle,
          cut_outside,
          skip_eps,
-         hole_file,
+         hole_pts,
          mute_log
     )
 
@@ -161,8 +165,11 @@ def compute_samples_aux(curve, start, end, start_point, end_point, error, max_de
 
 
 def convert_svg(input_svg):
+    print("call")
     doc = svg.Document(input_svg)
+    print("here")
     paths = doc.flatten_all_paths()
+    print("there")
 
     json_data = []
     vertices = []
