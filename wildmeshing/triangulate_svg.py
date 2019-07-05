@@ -18,7 +18,6 @@ def triangulate_svg(svg_path,
         skip_eps = False,
         hole_pts = None,
         mute_log = False):
-    print("call1")
     vertices, lines, json = convert_svg(svg_path)
 
     if hole_pts is None:
@@ -165,11 +164,8 @@ def compute_samples_aux(curve, start, end, start_point, end_point, error, max_de
 
 
 def convert_svg(input_svg):
-    print("call")
     doc = svg.Document(input_svg)
-    print("here")
     paths = doc.flatten_all_paths()
-    print("there")
 
     json_data = []
     vertices = []
