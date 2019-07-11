@@ -15,6 +15,7 @@ class TetrahedralizeTest(unittest.TestCase):
         mesh_path = os.path.join(dir_path, root_folder, "small.stl")
 
         wm.tetrahedralize(mesh_path, "tet_test.msh", mute_log=True)
+        wm.tetrahedralize(mesh_path, "tet_test.msh", mute_log=True)
 
 
 if __name__ == '__main__':

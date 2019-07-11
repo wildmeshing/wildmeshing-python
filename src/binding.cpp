@@ -395,8 +395,11 @@ PYBIND11_MODULE(wildmeshing, m)
             std::cout << "TBB threads " << num_threads << std::endl;
             tbb::task_scheduler_init scheduler(num_threads, stack_size);
 #endif
-
-            Logger::init(!params.is_quiet, params.log_path);
+            static bool initialized = false;
+            if(!initialized){
+                Logger::init(!params.is_quiet, params.log_path);
+                initialized = true;
+            }
             params.log_level = std::max(0, std::min(6, params.log_level));
             spdlog::set_level(static_cast<spdlog::level::level_enum>(params.log_level));
             spdlog::flush_every(std::chrono::seconds(3));
