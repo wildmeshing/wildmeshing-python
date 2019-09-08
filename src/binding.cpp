@@ -470,18 +470,14 @@ PYBIND11_MODULE(wildmeshing, m)
                 return;
             }
 
-            Statistics::stats().states.push_back(StateInfo(StateInfo::init_id,
-                                                           0, input_vertices.size(), input_faces.size(), -1, -1));
+            stats().record(StateInfo::init_id, 0, input_vertices.size(), input_faces.size(), -1, -1);
 
             timer.start();
             simplify(input_vertices, input_faces, input_tags, tree, params, skip_simplify);
             tree.init_b_mesh_and_tree(input_vertices, input_faces);
             logger().info("preprocessing {}s", timer.getElapsedTimeInSec());
             logger().info("");
-            Statistics::stats().states.push_back(StateInfo(StateInfo::preprocessing_id,
-                                                           timer.getElapsedTimeInSec(), input_vertices.size(),
-                                                           input_faces.size(),
-                                                           -1, -1));
+            stats().record(StateInfo::preprocessing_id, timer.getElapsedTimeInSec(), input_vertices.size(), input_faces.size(), -1, -1);
             if (params.log_level <= 1)
                 output_component(input_vertices, input_faces, input_tags);
 
@@ -492,35 +488,30 @@ PYBIND11_MODULE(wildmeshing, m)
             logger().info("#t = {}", mesh.get_t_num());
             logger().info("tetrahedralizing {}s", timer.getElapsedTimeInSec());
             logger().info("");
-            Statistics::stats().states.push_back(StateInfo(StateInfo::tetrahedralization_id,
-                                                           timer.getElapsedTimeInSec(), mesh.get_v_num(), mesh.get_t_num(),
-                                                           -1, -1));
+            stats().record(StateInfo::tetrahedralization_id, timer.getElapsedTimeInSec(), mesh.get_v_num(), mesh.get_t_num(), -1, -1);
 
             timer.start();
             cutting(input_vertices, input_faces, input_tags, mesh, is_face_inserted, tree);
             logger().info("cutting {}s", timer.getElapsedTimeInSec());
             logger().info("");
-            Statistics::stats().states.push_back(StateInfo(StateInfo::cutting_id,
-                                                           timer.getElapsedTimeInSec(), mesh.get_v_num(), mesh.get_t_num(),
+            stats().record(StateInfo::cutting_id, timer.getElapsedTimeInSec(), mesh.get_v_num(), mesh.get_t_num(),
                                                            mesh.get_max_energy(), mesh.get_avg_energy(),
-                                                           std::count(is_face_inserted.begin(), is_face_inserted.end(), false)));
+                                                           std::count(is_face_inserted.begin(), is_face_inserted.end(), false));
 
             timer.start();
             optimization(input_vertices, input_faces, input_tags, is_face_inserted, mesh, tree, {{1, 1, 1, 1}});
             logger().info("mesh optimization {}s", timer.getElapsedTimeInSec());
             logger().info("");
-            Statistics::stats().states.push_back(StateInfo(StateInfo::optimization_id,
-                                                           timer.getElapsedTimeInSec(), mesh.get_v_num(), mesh.get_t_num(),
-                                                           mesh.get_max_energy(), mesh.get_avg_energy()));
+            stats().record(StateInfo::optimization_id, timer.getElapsedTimeInSec(), mesh.get_v_num(), mesh.get_t_num(),
+                                                           mesh.get_max_energy(), mesh.get_avg_energy());
 
             timer.start();
             if (boolean_op < 0)
                 filter_outside(mesh);
             else
                 boolean_operation(mesh, boolean_op);
-            Statistics::stats().states.push_back(StateInfo(StateInfo::wn_id,
-                                                           timer.getElapsedTimeInSec(), mesh.get_v_num(), mesh.get_t_num(),
-                                                           mesh.get_max_energy(), mesh.get_avg_energy()));
+            stats().record(StateInfo::wn_id, timer.getElapsedTimeInSec(), mesh.get_v_num(), mesh.get_t_num(),
+                                                           mesh.get_max_energy(), mesh.get_avg_energy());
             logger().info("after winding number");
             logger().info("#v = {}", mesh.get_v_num());
             logger().info("#t = {}", mesh.get_t_num());
@@ -541,7 +532,7 @@ PYBIND11_MODULE(wildmeshing, m)
 
             std::ofstream fout(params.log_path + "_" + params.postfix + ".csv");
             if (fout.good())
-                fout << Statistics::stats();
+                fout << stats();
             fout.close();
         },
              "Robust Tetrahedralization, this is an alpha developement version of TetWild. For a stable release refer to the C++ version https://github.com/Yixin-Hu/TetWild",

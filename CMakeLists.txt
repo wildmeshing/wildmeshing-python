@@ -42,15 +42,15 @@ endif()
 # Setup dependencies
 include(WildMeshingDependencies)
 
-# wildmeshing_download_svg_parser()
-
 # triwild
 wildmeshing_download_triwild()
 add_subdirectory(${THIRD_PARTY_DIR}/triwild)
 
 
+# tetwild
 wildmeshing_download_tetwild()
 add_subdirectory(${THIRD_PARTY_DIR}/tetwild)
+
 
 # pybind11
 wildmeshing_download_pybind11()
