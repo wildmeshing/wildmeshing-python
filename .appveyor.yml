@@ -14,12 +14,14 @@ environment:
     PYTHON_VERSION: "3.6" # currently 3.6.8
     PYTHON_ARCH: "64"
     MINICONDA: C:\Miniconda3-x64
+    BUILD_COMMAND: "build --debug install"
 
-  - config: Debug
+  - config: Release
     PYTHON: "C:\\Python35-x64"
     PYTHON_VERSION: "3.5" # currently 3.5.8
     PYTHON_ARCH: "64"
     MINICONDA: C:\Miniconda3-x64
+    BUILD_COMMAND: "build install"
 # init:
 #   - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 # on_finish:
@@ -39,7 +41,7 @@ build_script:
   - cd c:\projects\wildmeshing
   - git submodule update --init --recursive
   - "python --version"
-  - python setup.py build --debug install
+  - python setup.py %BUILD_COMMAND%
 
 test_script:
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%MINICONDA%\\Scripts;%MINICONDA%\\Library\\include;%MINICONDA%\\Library\\lib;%MINICONDA%\\Library\\bin;%PATH%"
