@@ -8,7 +8,7 @@
 #include <igl/Timer.h>
 #include <igl/writeSTL.h>
 
-#ifdef USE_TBB
+#ifdef FLOAT_TETWILD_USE_TBB
 #include <tbb/task_scheduler_init.h>
 #include <thread>
 #endif
@@ -22,6 +22,7 @@
 #include <floattetwild/Simplification.h>
 #include <floattetwild/AABBWrapper.h>
 #include <floattetwild/Statistics.h>
+#include <floattetwild/TriangleInsertion.h>
 
 #include <floattetwild/Logger.hpp>
 #include <Eigen/Dense>
@@ -29,6 +30,7 @@
 #include <geogram/mesh/mesh.h>
 #include <geogram/basic/command_line.h>
 #include <geogram/basic/command_line_args.h>
+#include <geogram/basic/logger.h>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/eigen.h>
@@ -40,6 +42,52 @@ namespace py = pybind11;
 
 namespace
 {
+
+class GeoLoggerForward : public GEO::LoggerClient
+{
+    std::shared_ptr<spdlog::logger> logger_;
+
+public:
+    template <typename T>
+    GeoLoggerForward(T logger) : logger_(logger) {}
+
+private:
+    std::string truncate(const std::string &msg)
+    {
+        static size_t prefix_len = GEO::CmdLine::ui_feature(" ", false).size();
+        return msg.substr(prefix_len, msg.size() - 1 - prefix_len);
+    }
+
+protected:
+    void div(const std::string &title) override
+    {
+        logger_->trace(title.substr(0, title.size() - 1));
+    }
+
+    void out(const std::string &str) override
+    {
+        logger_->info(truncate(str));
+    }
+
+    void warn(const std::string &str) override
+    {
+        logger_->warn(truncate(str));
+    }
+
+    void err(const std::string &str) override
+    {
+        logger_->error(truncate(str));
+    }
+
+    void status(const std::string &str) override
+    {
+        // Errors and warnings are also dispatched as status by geogram, but without
+        // the "feature" header. We thus forward them as trace, to avoid duplicated
+        // logger info...
+        logger_->trace(str.substr(0, str.size() - 1));
+    }
+};
+
 void init_globals()
 {
     static bool initialized = false;
@@ -354,6 +402,8 @@ PYBIND11_MODULE(wildmeshing, m)
             using namespace Eigen;
             init_globals();
 
+            int boolean_op = -1;
+
             Mesh mesh;
             Parameters &params = mesh.params;
 
@@ -370,23 +420,17 @@ PYBIND11_MODULE(wildmeshing, m)
 
             params.is_quiet = mute_log;
 
-            // command_line.add_option("--tag", params.tag_path, "");
-            // const int UNION = 0;
-            // const int INTERSECTION = 1;
-            // const int DIFFERENCE = 2;
-            int boolean_op = -1;
-            // command_line.add_option("--op", boolean_op, "");
-            // command_line.add_option("--postfix", params.postfix, "");
-            params.log_level = 2;
-            // command_line.add_option("--log", params.log_path, "Log info to given file.");
-            // command_line.add_option("--level", params.log_level, "Log level (0 = most verbose, 6 = off).");
+            GEO::initialize();
+            //    exactinit();
+
+            // Import standard command line arguments, and custom ones
+            GEO::CmdLine::import_arg_group("standard");
+            GEO::CmdLine::import_arg_group("pre");
+            GEO::CmdLine::import_arg_group("algo");
 
             unsigned int max_threads = std::numeric_limits<unsigned int>::max();
-        // #ifdef USE_TBB
-        //         command_line.add_option("--max-threads", max_threads, "maximum number of threads used");
-        // #endif
 
-#ifdef USE_TBB
+#ifdef FLOAT_TETWILD_USE_TBB
             const size_t MB = 1024 * 1024;
             const size_t stack_size = 64 * MB;
             unsigned int num_threads = std::max(1u, std::thread::hardware_concurrency());
@@ -395,19 +439,27 @@ PYBIND11_MODULE(wildmeshing, m)
             std::cout << "TBB threads " << num_threads << std::endl;
             tbb::task_scheduler_init scheduler(num_threads, stack_size);
 #endif
+
+            //    if(params.is_quiet){
+            //        std::streambuf *orig_buf = cout.rdbuf();
+            //        cout.rdbuf(NULL);
+            //    }
+
             static bool initialized = false;
-            if(!initialized){
+            if (!initialized)
+            {
                 Logger::init(!params.is_quiet, params.log_path);
                 initialized = true;
             }
+
             params.log_level = std::max(0, std::min(6, params.log_level));
             spdlog::set_level(static_cast<spdlog::level::level_enum>(params.log_level));
             spdlog::flush_every(std::chrono::seconds(3));
 
-            // GEO::Logger *geo_logger = GEO::Logger::instance();
-            // geo_logger->unregister_all_clients();
-            // geo_logger->register_client(new GeoLoggerForward(logger().clone("geogram")));
-            // geo_logger->set_pretty(false);
+            GEO::Logger *geo_logger = GEO::Logger::instance();
+            geo_logger->unregister_all_clients();
+            geo_logger->register_client(new GeoLoggerForward(logger().clone("geogram")));
+            geo_logger->set_pretty(false);
 
             if (params.output_path.empty())
                 params.output_path = params.input_path;
@@ -425,7 +477,7 @@ PYBIND11_MODULE(wildmeshing, m)
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
             std::vector<Vector3> input_vertices;
-            std::vector<floatTetWild::Vector3i> input_faces;
+            std::vector<Vector3i> input_faces;
             std::vector<int> input_tags;
 
             if (!params.tag_path.empty())
@@ -450,12 +502,12 @@ PYBIND11_MODULE(wildmeshing, m)
             {
                 logger().error("Unable to load mesh at {}", params.input_path);
                 MeshIO::write_mesh(output_mesh_name, mesh, false);
-                return;
+                return false;
             }
             else if (input_vertices.empty() || input_faces.empty())
             {
                 MeshIO::write_mesh(output_mesh_name, mesh, false);
-                return;
+                return false;
             }
 
             if (input_tags.size() != input_faces.size())
@@ -467,7 +519,7 @@ PYBIND11_MODULE(wildmeshing, m)
 
             if (!params.init(tree.get_sf_diag()))
             {
-                return;
+                return false;
             }
 
             stats().record(StateInfo::init_id, 0, input_vertices.size(), input_faces.size(), -1, -1);
@@ -477,7 +529,8 @@ PYBIND11_MODULE(wildmeshing, m)
             tree.init_b_mesh_and_tree(input_vertices, input_faces);
             logger().info("preprocessing {}s", timer.getElapsedTimeInSec());
             logger().info("");
-            stats().record(StateInfo::preprocessing_id, timer.getElapsedTimeInSec(), input_vertices.size(), input_faces.size(), -1, -1);
+            stats().record(StateInfo::preprocessing_id, timer.getElapsedTimeInSec(), input_vertices.size(),
+                           input_faces.size(), -1, -1);
             if (params.log_level <= 1)
                 output_component(input_vertices, input_faces, input_tags);
 
@@ -488,52 +541,60 @@ PYBIND11_MODULE(wildmeshing, m)
             logger().info("#t = {}", mesh.get_t_num());
             logger().info("tetrahedralizing {}s", timer.getElapsedTimeInSec());
             logger().info("");
-            stats().record(StateInfo::tetrahedralization_id, timer.getElapsedTimeInSec(), mesh.get_v_num(), mesh.get_t_num(), -1, -1);
+            stats().record(StateInfo::tetrahedralization_id, timer.getElapsedTimeInSec(), mesh.get_v_num(), mesh.get_t_num(),
+                           -1, -1);
 
             timer.start();
-            cutting(input_vertices, input_faces, input_tags, mesh, is_face_inserted, tree);
+            insert_triangles(input_vertices, input_faces, input_tags, mesh, is_face_inserted, tree, false);
             logger().info("cutting {}s", timer.getElapsedTimeInSec());
             logger().info("");
             stats().record(StateInfo::cutting_id, timer.getElapsedTimeInSec(), mesh.get_v_num(), mesh.get_t_num(),
-                                                           mesh.get_max_energy(), mesh.get_avg_energy(),
-                                                           std::count(is_face_inserted.begin(), is_face_inserted.end(), false));
+                           mesh.get_max_energy(), mesh.get_avg_energy(),
+                           std::count(is_face_inserted.begin(), is_face_inserted.end(), false));
 
             timer.start();
             optimization(input_vertices, input_faces, input_tags, is_face_inserted, mesh, tree, {{1, 1, 1, 1}});
             logger().info("mesh optimization {}s", timer.getElapsedTimeInSec());
             logger().info("");
             stats().record(StateInfo::optimization_id, timer.getElapsedTimeInSec(), mesh.get_v_num(), mesh.get_t_num(),
-                                                           mesh.get_max_energy(), mesh.get_avg_energy());
+                           mesh.get_max_energy(), mesh.get_avg_energy());
 
             timer.start();
+            correct_tracked_surface_orientation(mesh, tree);
+            logger().info("correct_tracked_surface_orientation done");
             if (boolean_op < 0)
                 filter_outside(mesh);
             else
                 boolean_operation(mesh, boolean_op);
             stats().record(StateInfo::wn_id, timer.getElapsedTimeInSec(), mesh.get_v_num(), mesh.get_t_num(),
-                                                           mesh.get_max_energy(), mesh.get_avg_energy());
+                           mesh.get_max_energy(), mesh.get_avg_energy());
             logger().info("after winding number");
             logger().info("#v = {}", mesh.get_v_num());
             logger().info("#t = {}", mesh.get_t_num());
             logger().info("winding number {}s", timer.getElapsedTimeInSec());
             logger().info("");
 
-            // if (params.output_path.size() > 3
-            //     && params.output_path.substr(params.output_path.size() - 3, params.output_path.size()) == "msh")
-            //     MeshIO::write_mesh(params.output_path, mesh, false);
-            // else if (params.output_path.size() > 4
-            //          && params.output_path.substr(params.output_path.size() - 4, params.output_path.size()) == "mesh")
-            //     MeshIO::write_mesh(params.output_path, mesh, false);
-            // else
-            //     MeshIO::write_mesh(params.output_path + "_" + params.postfix + ".msh", mesh, false);
+            //    if (params.output_path.size() > 3
+            //        && params.output_path.substr(params.output_path.size() - 3, params.output_path.size()) == "msh")
+            //        MeshIO::write_mesh(params.output_path, mesh, false);
+            //    else if (params.output_path.size() > 4
+            //             && params.output_path.substr(params.output_path.size() - 4, params.output_path.size()) == "mesh")
+            //        MeshIO::write_mesh(params.output_path, mesh, false);
+            //    else
+            //        MeshIO::write_mesh(params.output_path + "_" + params.postfix + ".msh", mesh, false);
 
-            MeshIO::write_mesh(output_mesh_name, mesh, false);
-            MeshIO::write_surface_mesh(params.output_path + "_" + params.postfix + "_sf.obj", mesh, false);
+            // std::ofstream fout(params.log_path + "_" + params.postfix + ".csv");
+            // if (fout.good())
+            //     fout << stats();
+            // fout.close();
 
-            std::ofstream fout(params.log_path + "_" + params.postfix + ".csv");
-            if (fout.good())
-                fout << stats();
-            fout.close();
+            if (!params.envelope_log.empty())
+            {
+                std::ofstream fout(params.envelope_log);
+                fout << envelope_log_csv;
+            }
+
+            return true;
         },
              "Robust Tetrahedralization, this is an alpha developement version of TetWild. For a stable release refer to the C++ version https://github.com/Yixin-Hu/TetWild",
              py::arg("input"), // "Input surface mesh INPUT in .off/.obj/.stl/.ply format. (string, required)"
