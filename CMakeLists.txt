@@ -64,8 +64,14 @@ wildmeshing_download_data()
 ################################################################################
 # Subdirectories
 ################################################################################
-add_library(wildmeshing MODULE src/binding.cpp)
+add_library(wildmeshing MODULE
+	src/binding.cpp
+	src/Utils.cpp src/Utils.hpp
+	src/triangulate_data.hpp src/triangulate_data.cpp
+	src/triangulate.cpp src/triangulate.hpp
+	src/tetrahedralize.cpp src/tetrahedralize.hpp)
 target_include_directories(wildmeshing PRIVATE ${THIRD_PARTY_DIR}/triwild/src)
+
 target_link_libraries(wildmeshing PRIVATE triwild_lib)
 target_link_libraries(wildmeshing PRIVATE FloatTetwild)
 target_link_libraries(wildmeshing PRIVATE pybind11::module)
