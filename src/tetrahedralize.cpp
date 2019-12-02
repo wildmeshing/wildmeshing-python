@@ -36,7 +36,6 @@ namespace wildmeshing_binding
         {
             public:
                 Mesh mesh;
-                int boolean_op = -1;
 
                 std::vector<Vector3> input_vertices;
                 std::vector<Vector3i> input_faces;
@@ -48,9 +47,11 @@ namespace wildmeshing_binding
                 Tetrahedralizer(
                     double stop_quality, int max_its, int stage, int stop_p,
                 double epsilon, double edge_length_r,
-                bool skip_simplify, bool smooth_open_boundary, bool manifold_surface, bool correct_surface_orientation):
+                bool skip_simplify):
                 skip_simplify(skip_simplify)
                 {
+                    wildmeshing_binding::init_globals();
+
                     Parameters &params = mesh.params;
 
                     // params.input_path = input;
@@ -64,19 +65,30 @@ namespace wildmeshing_binding
                     params.eps_rel = epsilon;
                     params.ideal_edge_length_rel = edge_length_r;
 
-                    params.correct_surface_orientation = correct_surface_orientation;
-                    params.smooth_open_boundary = smooth_open_boundary;
-                    params.manifold_surface = manifold_surface;
 
-                    params.log_level = 0;
+                    params.log_level = 6;
+
+                    unsigned int max_threads = std::numeric_limits<unsigned int>::max();
+                    unsigned int num_threads = 1;
+#ifdef FLOAT_TETWILD_USE_TBB
+                    const size_t MB = 1024 * 1024;
+                    const size_t stack_size = 64 * MB;
+                    num_threads = std::max(1u, std::thread::hardware_concurrency());
+                    num_threads = std::min(max_threads, num_threads);
+                    // params.num_threads = num_threads;
+                    std::cout << "TBB threads " << num_threads << std::endl;
+                    tbb::task_scheduler_init scheduler(num_threads, stack_size);
+#endif
+                    set_num_threads(num_threads);
                 }
-
+            private:
                 void set_num_threads(int num_threads)
                 {
                     Parameters &params = mesh.params;
                     params.num_threads = num_threads;
                 }
 
+            public:
                 void set_log_level(int level)
                 {
                     Parameters &params = mesh.params;
@@ -90,7 +102,6 @@ namespace wildmeshing_binding
                     Parameters &params = mesh.params;
                     params.input_path = path;
                     params.tag_path = tag_path;
-                    igl::Timer timer;
 
                     if (!params.tag_path.empty())
                     {
@@ -117,6 +128,63 @@ namespace wildmeshing_binding
                         return false;
                     }
 
+                    return load_mesh_aux();
+                }
+
+                void set_mesh(const Eigen::MatrixXd &V, const Eigen::MatrixXi &F)
+                {
+                    if(F.cols() != 3)
+                        throw std::invalid_argument("Mesh format not supported, F should have 3 cols");
+                    if (V.cols() != 3)
+                        throw std::invalid_argument("Mesh format not supported, V should have 3 cols");
+
+                    input_vertices.resize(V.rows());
+                    for(int i = 0; i < V.rows(); ++i)
+                    {
+                        input_vertices[i][0] = V(i, 0);
+                        input_vertices[i][1] = V(i, 1);
+                        input_vertices[i][2] = V(i, 2);
+                    }
+
+                    input_faces.resize(F.rows());
+                    for (int i = 0; i < F.rows(); ++i)
+                    {
+                        input_faces[i][0] = F(i, 0);
+                        input_faces[i][1] = F(i, 1);
+                        input_faces[i][2] = F(i, 2);
+                    }
+
+                    sf_mesh.clear();
+
+                    sf_mesh.vertices.create_vertices((int)V.rows());
+                    for (int i = 0; i < (int)sf_mesh.vertices.nb(); ++i)
+                    {
+                        GEO::vec3 &p = sf_mesh.vertices.point(i);
+                        p[0] = V(i, 0);
+                        p[1] = V(i, 1);
+                        p[2] = V(i, 2);
+                    }
+                    // Setup faces
+                    sf_mesh.facets.create_triangles((int)F.rows());
+
+                    for (int c = 0; c < (int)sf_mesh.facets.nb(); ++c)
+                    {
+                        for (int lv = 0; lv < F.cols(); ++lv)
+                        {
+                            sf_mesh.facets.set_vertex(c, lv, F(c, lv));
+                        }
+                    }
+
+                    input_tags.clear();
+
+                    load_mesh_aux();
+                }
+
+            private:
+
+                bool load_mesh_aux() {
+                    Parameters &params = mesh.params;
+
                     if (input_tags.size() != input_faces.size())
                     {
                         input_tags.resize(input_faces.size());
@@ -132,6 +200,8 @@ namespace wildmeshing_binding
                     stats().record(StateInfo::init_id, 0, input_vertices.size(), input_faces.size(), -1, -1);
                     return true;
                 }
+
+            public:
 
                 void tetrahedralize()
                 {
@@ -178,12 +248,17 @@ namespace wildmeshing_binding
                     logger().info("correct_tracked_surface_orientation done");
                 }
 
-                void save(const std::string &path)
+                void save(const std::string &path, bool smooth_open_boundary, bool manifold_surface, bool correct_surface_orientation, int boolean_op = -1)
                 {
                     igl::Timer timer;
 
-                    Parameters &params = mesh.params;
+                    Mesh mesh_copy = mesh;
+
+                    Parameters &params = mesh_copy.params;
                     params.output_path = path;
+                    params.correct_surface_orientation = correct_surface_orientation;
+                    params.smooth_open_boundary = smooth_open_boundary;
+                    params.manifold_surface = manifold_surface;
 
                     if (params.output_path.empty())
                         params.output_path = params.input_path;
@@ -202,42 +277,129 @@ namespace wildmeshing_binding
                     {
                         if (params.smooth_open_boundary)
                         {
-                            floatTetWild::smooth_open_boundary(mesh, *tree);
-                            for (auto &t : mesh.tets)
+                            floatTetWild::smooth_open_boundary(mesh_copy, *tree);
+                            for (auto &t : mesh_copy.tets)
                             {
                                 if (t.is_outside)
                                     t.is_removed = true;
                             }
                         }
                         else
-                            filter_outside(mesh);
+                            filter_outside(mesh_copy);
                     }
                     else
-                        boolean_operation(mesh, boolean_op);
+                        boolean_operation(mesh_copy, boolean_op);
                     if (params.manifold_surface)
                     {
                         //        MeshIO::write_mesh(params.output_path + "_" + params.postfix + "_non_manifold.msh", mesh, false);
-                        floatTetWild::manifold_surface(mesh);
+                        floatTetWild::manifold_surface(mesh_copy);
                     }
-                    stats().record(StateInfo::wn_id, timer.getElapsedTimeInSec(), mesh.get_v_num(), mesh.get_t_num(),
-                                   mesh.get_max_energy(), mesh.get_avg_energy());
+                    stats().record(StateInfo::wn_id, timer.getElapsedTimeInSec(), mesh_copy.get_v_num(), mesh_copy.get_t_num(),
+                                   mesh_copy.get_max_energy(), mesh_copy.get_avg_energy());
                     logger().info("after winding number");
-                    logger().info("#v = {}", mesh.get_v_num());
-                    logger().info("#t = {}", mesh.get_t_num());
+                    logger().info("#v = {}", mesh_copy.get_v_num());
+                    logger().info("#t = {}", mesh_copy.get_t_num());
                     logger().info("winding number {}s", timer.getElapsedTimeInSec());
                     logger().info("");
 
                     if (params.output_path.size() > 3 && params.output_path.substr(params.output_path.size() - 3, params.output_path.size()) == "msh")
-                        MeshIO::write_mesh(params.output_path, mesh, false);
+                        MeshIO::write_mesh(params.output_path, mesh_copy, false);
                     else if (params.output_path.size() > 4 && params.output_path.substr(params.output_path.size() - 4, params.output_path.size()) == "mesh")
-                        MeshIO::write_mesh(params.output_path, mesh, false);
+                        MeshIO::write_mesh(params.output_path, mesh_copy, false);
                     else
-                        MeshIO::write_mesh(params.output_path + "_" + params.postfix + ".msh", mesh, false);
+                        MeshIO::write_mesh(params.output_path + "_" + params.postfix + ".msh", mesh_copy, false);
                 }
 
-                std::string get_log() {
+                void get_tet_mesh(bool smooth_open_boundary, bool manifold_surface, bool correct_surface_orientation, Eigen::MatrixXd &V, Eigen::MatrixXi &T, int boolean_op = -1)
+                {
+                    igl::Timer timer;
+
+                    Mesh mesh_copy = mesh;
+
+                    const auto skip_tet = [&mesh_copy](const int i) { return mesh_copy.tets[i].is_removed; };
+                    const auto skip_vertex = [&mesh_copy](const int i) { return mesh_copy.tet_vertices[i].is_removed; };
+                    std::vector<int> t_ids(mesh_copy.tets.size());
+                    std::iota(std::begin(t_ids), std::end(t_ids), 0);
+
+                    Parameters &params = mesh_copy.params;
+                    params.correct_surface_orientation = correct_surface_orientation;
+                    params.smooth_open_boundary = smooth_open_boundary;
+                    params.manifold_surface = manifold_surface;
+
+                    if (boolean_op < 0)
+                    {
+                        if (params.smooth_open_boundary)
+                        {
+                            floatTetWild::smooth_open_boundary(mesh_copy, *tree);
+                            for (auto &t : mesh_copy.tets)
+                            {
+                                if (t.is_outside)
+                                    t.is_removed = true;
+                            }
+                        }
+                        else
+                            filter_outside(mesh_copy);
+                    }
+                    else
+                        boolean_operation(mesh_copy, boolean_op);
+                    if (params.manifold_surface)
+                    {
+                        //        MeshIO::write_mesh(params.output_path + "_" + params.postfix + "_non_manifold.msh", mesh, false);
+                        floatTetWild::manifold_surface(mesh_copy);
+                    }
+                    stats().record(StateInfo::wn_id, timer.getElapsedTimeInSec(), mesh_copy.get_v_num(), mesh_copy.get_t_num(),
+                                   mesh_copy.get_max_energy(), mesh_copy.get_avg_energy());
+                    logger().info("after winding number");
+                    logger().info("#v = {}", mesh_copy.get_v_num());
+                    logger().info("#t = {}", mesh_copy.get_t_num());
+                    logger().info("winding number {}s", timer.getElapsedTimeInSec());
+                    logger().info("");
+
+
+                    int cnt_v = 0;
+                    std::map<int, int> old_2_new;
+                    for (int i = 0; i < mesh.tet_vertices.size(); i++)
+                    {
+                        if (!skip_vertex(i))
+                        {
+                            old_2_new[i] = cnt_v;
+                            cnt_v++;
+                        }
+                    }
+                    int cnt_t = 0;
+                    for (const int i : t_ids)
+                    {
+                        if (!skip_tet(i))
+                            cnt_t++;
+                    }
+
+                    V.resize(cnt_v, 3);
+                    int index = 0;
+                    for (size_t i = 0; i < mesh.tet_vertices.size(); i++)
+                    {
+                        if (skip_vertex(i))
+                            continue;
+                        V.row(index++) << mesh.tet_vertices[i][0], mesh.tet_vertices[i][1], mesh.tet_vertices[i][2];
+                    }
+
+                    T.resize(cnt_t, 4);
+                    index = 0;
+
+                    for (const int i : t_ids)
+                    {
+                        if (skip_tet(i))
+                            continue;
+                        for (int j = 0; j < 4; j++)
+                        {
+                            T(index, j) = old_2_new[mesh.tets[i][j]];
+                        }
+                        index++;
+                    }
+                }
+
+                std::string get_stats() const {
                     std::stringstream ss;
-                    ss << envelope_log_csv;
+                    ss << stats();
                     return ss.str();
                 }
         };
@@ -246,20 +408,43 @@ namespace wildmeshing_binding
 
 void tetrahedralize(py::module &m)
 {
+    auto &tetra = py::class_<Tetrahedralizer>(m, "Tetrahedralizer")
+                      .def(py::init<
+                               double, int, int, int,
+                               double, double,
+                               bool>(),
+                           py::arg("stop_quality") = 10,        // "Specify max AMIPS energy for stopping mesh optimization"
+                           py::arg("max_its") = 80,             // "Max number of mesh optimization iterations"
+                           py::arg("stage") = 2,                // "Specify envelope stage"
+                           py::arg("stop_p") = -1,              //
+                           py::arg("epsilon") = 1e-3,           // "relative envelope epsilon_r. Absolute epsilonn = epsilon_r * diagonal_of_bbox"
+                           py::arg("edge_length_r") = 1. / 20., // "Relative target edge length l_r. Absolute l = l_r * diagonal_of_bbox"
+                           py::arg("skip_simplify") = false     //
+                           )
+
+                      .def("set_log_level", [](Tetrahedralizer &t, int level) { t.set_log_level(level); }, "sets log level, valid value between 0 (all logs) and 6 (no logs)", py::arg("level"))
+                      .def("load_mesh", [](Tetrahedralizer &t, const std::string &path) { t.load_mesh(path); }, "loads a mesh", py::arg("path"))
+                      .def("set_mesh", [](Tetrahedralizer &t, const Eigen::MatrixXd &V, const Eigen::MatrixXi &F) { t.set_mesh(V, F); }, "sets a mesh", py::arg("V"), py::arg("F"))
+                      .def("tetrahedralize", [](Tetrahedralizer &t) { t.tetrahedralize(); }, "tetrahedralized the mesh")
+                      .def("save", [](Tetrahedralizer &t, const std::string &path, bool smooth_open_boundary, bool manifold_surface, bool correct_surface_orientation) {
+                          t.save(path, smooth_open_boundary, manifold_surface, correct_surface_orientation);
+                      },
+                           "saves the output", py::arg("path"), py::arg("smooth_open_boundary") = false, py::arg("manifold_surface") = false, py::arg("correct_surface_orientation") = false)
+                      .def("get_tet_mesh", [](Tetrahedralizer &t, bool smooth_open_boundary, bool manifold_surface, bool correct_surface_orientation) {
+                          Eigen::MatrixXd V;
+                          Eigen::MatrixXi T;
+                          t.get_tet_mesh(smooth_open_boundary, manifold_surface, correct_surface_orientation, V, T);
+
+                          return py::make_tuple(V, T);
+                      },
+                           "saves the output", py::arg("smooth_open_boundary") = false, py::arg("manifold_surface") = false, py::arg("correct_surface_orientation") = false)
+                      .def("get_stats", [](const Tetrahedralizer &t) { return t.get_stats(); }, "returns the stats");
+
+    tetra.doc() = "Wildmeshing tetrahedralizer";
+
     m.def("tetrahedralize", [](const std::string &input, const std::string &output, double stop_quality, int max_its, int stage, int stop_p, double epsilon, double edge_length_r, bool mute_log, bool skip_simplify, bool smooth_open_boundary, bool manifold_surface, bool correct_surface_orientation) {
         wildmeshing_binding::init_globals();
 
-        unsigned int max_threads = std::numeric_limits<unsigned int>::max();
-        unsigned int num_threads = 1;
-#ifdef FLOAT_TETWILD_USE_TBB
-            const size_t MB = 1024 * 1024;
-        const size_t stack_size = 64 * MB;
-        num_threads = std::max(1u, std::thread::hardware_concurrency());
-        num_threads = std::min(max_threads, num_threads);
-        // params.num_threads = num_threads;
-        std::cout << "TBB threads " << num_threads << std::endl;
-        tbb::task_scheduler_init scheduler(num_threads, stack_size);
-#endif
 
         static bool initialized = false;
         if (!initialized)
@@ -268,13 +453,12 @@ void tetrahedralize(py::module &m)
             initialized = true;
         }
 
-        Tetrahedralizer tetra(stop_quality, max_its, stage, stop_p, epsilon, edge_length_r, skip_simplify, smooth_open_boundary, manifold_surface, correct_surface_orientation);
-        tetra.set_num_threads(num_threads);
+        Tetrahedralizer tetra(stop_quality, max_its, stage, stop_p, epsilon, edge_length_r, skip_simplify);
         if(!tetra.load_mesh(input))
             return false;
 
         tetra.tetrahedralize();
-        tetra.save(output);
+        tetra.save(output, smooth_open_boundary, manifold_surface, correct_surface_orientation);
 
         return true;
     },
