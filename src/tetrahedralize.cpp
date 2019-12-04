@@ -363,7 +363,7 @@ public:
 
         Mesh mesh_copy = mesh;
 
-        const auto skip_tet = [&mesh_copy](const int i) { return mesh_copy.tets[i].is_removed; };
+        const auto skip_tet    = [&mesh_copy](const int i) { return mesh_copy.tets[i].is_removed; };
         const auto skip_vertex = [&mesh_copy](const int i) { return mesh_copy.tet_vertices[i].is_removed; };
         std::vector<int> t_ids(mesh_copy.tets.size());
         std::iota(std::begin(t_ids), std::end(t_ids), 0);
@@ -374,27 +374,26 @@ public:
         params.manifold_surface = manifold_surface;
 
         if (has_json_csg)
-            floatTetWild::boolean_operation(mesh, tree_with_ids);
+            floatTetWild::boolean_operation(mesh_copy, tree_with_ids);
         else if (boolean_op >= 0)
-            floatTetWild::boolean_operation(mesh, boolean_op);
+            floatTetWild::boolean_operation(mesh_copy, boolean_op);
         else
         {
             if (params.smooth_open_boundary)
             {
-                floatTetWild::smooth_open_boundary(mesh, *tree);
-                for (auto &t : mesh.tets)
+                floatTetWild::smooth_open_boundary(mesh_copy, *tree);
+                for (auto &t : mesh_copy.tets)
                 {
                     if (t.is_outside)
                         t.is_removed = true;
                 }
             }
             else
-                filter_outside(mesh);
+                filter_outside(mesh_copy);
         }
 
         if (params.manifold_surface)
         {
-            //        MeshIO::write_mesh(params.output_path + "_" + params.postfix + "_non_manifold.msh", mesh, false);
             floatTetWild::manifold_surface(mesh_copy);
         }
         stats().record(StateInfo::wn_id, timer.getElapsedTimeInSec(), mesh_copy.get_v_num(), mesh_copy.get_t_num(),
@@ -407,7 +406,7 @@ public:
 
         int cnt_v = 0;
         std::map<int, int> old_2_new;
-        for (int i = 0; i < mesh.tet_vertices.size(); i++)
+        for (int i = 0; i < mesh_copy.tet_vertices.size(); i++)
         {
             if (!skip_vertex(i))
             {
@@ -424,11 +423,11 @@ public:
 
         V.resize(cnt_v, 3);
         int index = 0;
-        for (size_t i = 0; i < mesh.tet_vertices.size(); i++)
+        for (size_t i = 0; i < mesh_copy.tet_vertices.size(); i++)
         {
             if (skip_vertex(i))
                 continue;
-            V.row(index++) << mesh.tet_vertices[i][0], mesh.tet_vertices[i][1], mesh.tet_vertices[i][2];
+            V.row(index++) << mesh_copy.tet_vertices[i][0], mesh_copy.tet_vertices[i][1], mesh_copy.tet_vertices[i][2];
         }
 
         T.resize(cnt_t, 4);
@@ -440,7 +439,7 @@ public:
                 continue;
             for (int j = 0; j < 4; j++)
             {
-                T(index, j) = old_2_new[mesh.tets[i][j]];
+                T(index, j) = old_2_new[mesh_copy.tets[i][j]];
             }
             index++;
         }
@@ -498,8 +497,11 @@ void tetrahedralize(py::module &m)
                           Eigen::MatrixXi T;
                           const std::string tmp = py::str(csg_tree);
                           t.tree_with_ids = json::parse(tmp);
+                          t.has_json_csg = true;
 
                           t.get_tet_mesh(smooth_open_boundary, manifold_surface, correct_surface_orientation, V, T);
+
+                          t.has_json_csg = false;
 
                           return py::make_tuple(V, T);
                       },
