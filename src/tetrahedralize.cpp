@@ -10,6 +10,7 @@
 #include <floattetwild/AABBWrapper.h>
 #include <floattetwild/Statistics.h>
 #include <floattetwild/TriangleInsertion.h>
+#include <floattetwild/CSGTreeParser.hpp>
 
 #include <floattetwild/Logger.hpp>
 #include <Eigen/Dense>
@@ -43,6 +44,8 @@ namespace wildmeshing_binding
                 GEO::Mesh sf_mesh;
                 std::unique_ptr<AABBWrapper> tree;
                 bool skip_simplify;
+                json tree_with_ids;
+                bool has_json_csg = false;
 
                 Tetrahedralizer(
                     double stop_quality, int max_its, int stage, int stop_p,
@@ -131,6 +134,30 @@ namespace wildmeshing_binding
                     return load_mesh_aux();
                 }
 
+                bool boolean_operation(const std::string &json_string)
+                {
+                    json csg_tree;
+                    std::ifstream file(json_string);
+
+                    if (file.is_open())
+                    {
+                        file >> csg_tree;
+                        file.close();
+                    }
+                    else
+                        csg_tree = json::parse(json_string, nullptr);
+
+                    std::vector<std::string> meshes;
+
+                    CSGTreeParser::get_meshes(csg_tree, meshes, tree_with_ids);
+                    has_json_csg = true;
+
+                    bool ok = CSGTreeParser::load_and_merge(meshes, input_vertices, input_faces, sf_mesh, input_tags);
+
+                    load_mesh_aux();
+                    return ok;
+                }
+
                 void set_mesh(const Eigen::MatrixXd &V, const Eigen::MatrixXi &F)
                 {
                     if(F.cols() != 3)
@@ -154,28 +181,7 @@ namespace wildmeshing_binding
                         input_faces[i][2] = F(i, 2);
                     }
 
-                    sf_mesh.clear();
-
-                    sf_mesh.vertices.create_vertices((int)V.rows());
-                    for (int i = 0; i < (int)sf_mesh.vertices.nb(); ++i)
-                    {
-                        GEO::vec3 &p = sf_mesh.vertices.point(i);
-                        p[0] = V(i, 0);
-                        p[1] = V(i, 1);
-                        p[2] = V(i, 2);
-                    }
-                    // Setup faces
-                    sf_mesh.facets.create_triangles((int)F.rows());
-
-                    for (int c = 0; c < (int)sf_mesh.facets.nb(); ++c)
-                    {
-                        for (int lv = 0; lv < F.cols(); ++lv)
-                        {
-                            sf_mesh.facets.set_vertex(c, lv, F(c, lv));
-                        }
-                    }
-
-                    input_tags.clear();
+                    MeshIO::load_mesh(input_vertices, input_faces, sf_mesh, input_tags);
 
                     load_mesh_aux();
                 }
@@ -273,22 +279,24 @@ namespace wildmeshing_binding
                     else
                         output_mesh_name = params.output_path + "_" + params.postfix + ".msh";
 
-                    if (boolean_op < 0)
+                    if (has_json_csg)
+                        floatTetWild::boolean_operation(mesh, tree_with_ids);
+                    else if (boolean_op >= 0)
+                        floatTetWild::boolean_operation(mesh, boolean_op);
+                    else
                     {
                         if (params.smooth_open_boundary)
                         {
-                            floatTetWild::smooth_open_boundary(mesh_copy, *tree);
-                            for (auto &t : mesh_copy.tets)
+                            floatTetWild::smooth_open_boundary(mesh, *tree);
+                            for (auto &t : mesh.tets)
                             {
                                 if (t.is_outside)
                                     t.is_removed = true;
                             }
                         }
                         else
-                            filter_outside(mesh_copy);
+                            filter_outside(mesh);
                     }
-                    else
-                        boolean_operation(mesh_copy, boolean_op);
                     if (params.manifold_surface)
                     {
                         //        MeshIO::write_mesh(params.output_path + "_" + params.postfix + "_non_manifold.msh", mesh, false);
@@ -326,22 +334,25 @@ namespace wildmeshing_binding
                     params.smooth_open_boundary = smooth_open_boundary;
                     params.manifold_surface = manifold_surface;
 
-                    if (boolean_op < 0)
+                    if (has_json_csg)
+                        floatTetWild::boolean_operation(mesh, tree_with_ids);
+                    else if (boolean_op >= 0)
+                        floatTetWild::boolean_operation(mesh, boolean_op);
+                    else
                     {
                         if (params.smooth_open_boundary)
                         {
-                            floatTetWild::smooth_open_boundary(mesh_copy, *tree);
-                            for (auto &t : mesh_copy.tets)
+                            floatTetWild::smooth_open_boundary(mesh, *tree);
+                            for (auto &t : mesh.tets)
                             {
                                 if (t.is_outside)
                                     t.is_removed = true;
                             }
                         }
                         else
-                            filter_outside(mesh_copy);
+                            filter_outside(mesh);
                     }
-                    else
-                        boolean_operation(mesh_copy, boolean_op);
+
                     if (params.manifold_surface)
                     {
                         //        MeshIO::write_mesh(params.output_path + "_" + params.postfix + "_non_manifold.msh", mesh, false);
@@ -478,5 +489,41 @@ void tetrahedralize(py::module &m)
           py::arg("manifold_surface") = false,
           py::arg("correct_surface_orientation") = false
     );
+
+    m.def("boolean_operation", [](const py::object &json, const std::string &output, double stop_quality, int max_its, int stage, int stop_p, double epsilon, double edge_length_r, bool mute_log, bool skip_simplify, bool smooth_open_boundary, bool manifold_surface, bool correct_surface_orientation) {
+        wildmeshing_binding::init_globals();
+
+        static bool initialized = false;
+        if (!initialized)
+        {
+            Logger::init(!mute_log);
+            initialized = true;
+        }
+
+        Tetrahedralizer tetra(stop_quality, max_its, stage, stop_p, epsilon, edge_length_r, skip_simplify);
+
+        const std::string tmp = py::str(json);
+
+        if (!tetra.boolean_operation(tmp))
+            return false;
+
+        tetra.tetrahedralize();
+        tetra.save(output, smooth_open_boundary, manifold_surface, correct_surface_orientation);
+
+        return true;
+    },
+          "Robust boolean operation, this is an alpha developement version",
+          py::arg("json"), // "Input surface mesh INPUT in .off/.obj/.stl/.ply format. (string, required)"
+          // py::arg("postfix") = "" //"Add postfix into outputs' file name"
+          py::arg("output") = "",              // "Output tetmesh OUTPUT in .msh format. (string, optional, default: input_file+postfix+'.msh')"
+          py::arg("stop_quality") = 10,        // "Specify max AMIPS energy for stopping mesh optimization"
+          py::arg("max_its") = 80,             // "Max number of mesh optimization iterations"
+          py::arg("stage") = 2,                // "Specify envelope stage"
+          py::arg("stop_p") = -1,              //
+          py::arg("epsilon") = 1e-3,           // "relative envelope epsilon_r. Absolute epsilonn = epsilon_r * diagonal_of_bbox"
+          py::arg("edge_length_r") = 1. / 20., // "Relative target edge length l_r. Absolute l = l_r * diagonal_of_bbox"
+          py::arg("mute_log") = false,         // "Mute prints");
+          py::arg("skip_simplify") = false,    //
+          py::arg("smooth_open_boundary") = false, py::arg("manifold_surface") = false, py::arg("correct_surface_orientation") = false);
 }
 }

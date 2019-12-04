@@ -3,6 +3,7 @@
 #include <floattetwild/Logger.hpp>
 
 #include <spdlog/spdlog.h>
+#include <spdlog/async.h>
 
 #include <geogram/mesh/mesh.h>
 #include <geogram/basic/command_line.h>
@@ -66,6 +67,8 @@ void init_globals()
 
     if (!initialized)
     {
+        spdlog::init_thread_pool(8192, 1);
+
 #ifndef WIN32
         setenv("GEO_NO_SIGNAL_HANDLER", "1", 1);
 #endif
