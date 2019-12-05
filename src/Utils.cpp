@@ -80,10 +80,10 @@ void init_globals()
         GEO::CmdLine::import_arg_group("pre");
         GEO::CmdLine::import_arg_group("algo");
 
-        GEO::Logger *geo_logger = GEO::Logger::instance();
-        geo_logger->unregister_all_clients();
-        geo_logger->register_client(new GeoLoggerForward(floatTetWild::logger().clone("geogram")));
-        geo_logger->set_pretty(false);
+        // GEO::Logger *geo_logger = GEO::Logger::instance();
+        // geo_logger->unregister_all_clients();
+        // geo_logger->register_client(new GeoLoggerForward(floatTetWild::logger().clone("geogram")));
+        // geo_logger->set_pretty(false);
 
         initialized = true;
     }

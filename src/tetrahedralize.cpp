@@ -119,15 +119,21 @@ public:
                 }
                 fin.close();
             }
+            else
+            {
+                throw std::invalid_argument("Invalid mesh format tag at " + params.tag_path);
+            }
+
         }
 
         if (!MeshIO::load_mesh(params.input_path, input_vertices, input_faces, sf_mesh, input_tags))
         {
-            logger().error("Unable to load mesh at {}", params.input_path);
+            throw std::invalid_argument("Invalid mesh path at " + params.input_path);
             return false;
         }
         else if (input_vertices.empty() || input_faces.empty())
         {
+            throw std::invalid_argument("Invalid mesh path at " + params.input_path);
             return false;
         }
 
@@ -153,6 +159,10 @@ public:
         has_json_csg = true;
 
         bool ok = CSGTreeParser::load_and_merge(meshes, input_vertices, input_faces, sf_mesh, input_tags);
+        if(!ok)
+        {
+            throw std::invalid_argument("Invalid mesh path in the json");
+        }
 
         load_mesh_aux();
         return ok;
@@ -240,6 +250,7 @@ private:
 
         if (!params.init(tree->get_sf_diag()))
         {
+            throw std::invalid_argument("Unable to initialize the tree, probably a problem with the mesh");
             return false;
         }
 
@@ -338,9 +349,9 @@ public:
         }
         if (params.manifold_surface)
         {
-            //        MeshIO::write_mesh(params.output_path + "_" + params.postfix + "_non_manifold.msh", mesh, false);
             floatTetWild::manifold_surface(mesh_copy);
         }
+
         stats().record(StateInfo::wn_id, timer.getElapsedTimeInSec(), mesh_copy.get_v_num(), mesh_copy.get_t_num(),
                        mesh_copy.get_max_energy(), mesh_copy.get_avg_energy());
         logger().info("after winding number");

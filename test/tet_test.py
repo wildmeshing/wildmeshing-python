@@ -1,5 +1,6 @@
 import unittest
 import json
+import platform
 
 import os
 
@@ -19,21 +20,23 @@ class TetrahedralizeTest(unittest.TestCase):
         dir_path = os.path.dirname(os.path.realpath(__file__))
         mesh_path = os.path.join(dir_path, root_folder, "small.stl")
 
-        wm.tetrahedralize(mesh_path, "tet_test.msh", mute_log=True)
+        wm.tetrahedralize(mesh_path, "tet_test.msh", mute_log=True, stop_quality=1000)
 
     def test_data(self):
         root_folder = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "3rdparty", "data")
         V = np.load(os.path.join(root_folder, "V.npy"))
         F = np.load(os.path.join(root_folder, "F.npy"))
 
-
-        tetra = wm.Tetrahedralizer()
+        tetra = wm.Tetrahedralizer(stop_quality=1000)
         tetra.set_mesh(V, F)
         tetra.tetrahedralize()
         VT, TT = tetra.get_tet_mesh()
         # mp.plot(VT, TT, filename="plot.html")
 
     def test_boolean(self):
+        if platform.system() == "Windows":
+            return
+
         root_folder = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "3rdparty", "data")
 
         csg_tree = {
@@ -54,9 +57,12 @@ class TetrahedralizeTest(unittest.TestCase):
             }
         }
 
-        wm.boolean_operation(json.dumps(csg_tree), "bool")
+        wm.boolean_operation(json.dumps(csg_tree), "bool", stop_quality=1000)
 
     def test_boolean1(self):
+        if platform.system() == "Windows":
+            return
+
         root_folder = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "3rdparty", "data")
 
         csg_tree = {
@@ -77,7 +83,7 @@ class TetrahedralizeTest(unittest.TestCase):
             }
         }
 
-        tetra = wm.Tetrahedralizer()
+        tetra = wm.Tetrahedralizer(stop_quality=1000)
         tetra.load_csg_tree(json.dumps(csg_tree))
         tetra.tetrahedralize()
         VT, TT = tetra.get_tet_mesh()
