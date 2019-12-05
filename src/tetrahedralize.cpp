@@ -40,7 +40,7 @@ public:
     Mesh mesh;
 
     std::vector<Vector3> input_vertices;
-    std::vector<Vector3i> input_faces;
+    std::vector<floatTetWild::Vector3i> input_faces;
     std::vector<int> input_tags;
     GEO::Mesh sf_mesh;
     std::unique_ptr<AABBWrapper> tree;
@@ -199,7 +199,7 @@ public:
     void set_meshes(const std::vector<Eigen::MatrixXd> &V, const std::vector<Eigen::MatrixXi> &F)
     {
         std::vector<std::vector<Vector3>> vs(V.size());
-        std::vector<std::vector<Vector3i>> fs(F.size());
+        std::vector<std::vector<floatTetWild::Vector3i>> fs(F.size());
 
         if(V.size() != F.size())
             throw std::invalid_argument("V and F must have the same size");
