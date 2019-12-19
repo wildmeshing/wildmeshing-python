@@ -73,7 +73,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="wildmeshing",
-    version="0.2",
+    version="0.2.1",
     author="Teseo Schneider",
     author_email="",
     description="WildMeshing Bindings",

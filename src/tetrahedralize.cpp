@@ -368,7 +368,7 @@ public:
             MeshIO::write_mesh(params.output_path + "_" + params.postfix + ".msh", mesh_copy, false);
     }
 
-    void get_tet_mesh(bool smooth_open_boundary, bool manifold_surface, bool correct_surface_orientation, Eigen::MatrixXd &V, Eigen::MatrixXi &T, int boolean_op = -1)
+    void get_tet_mesh(bool smooth_open_boundary, bool manifold_surface, bool correct_surface_orientation, bool all_mesh, Eigen::MatrixXd &V, Eigen::MatrixXi &T, int boolean_op = -1)
     {
         igl::Timer timer;
 
@@ -384,31 +384,35 @@ public:
         params.smooth_open_boundary = smooth_open_boundary;
         params.manifold_surface = manifold_surface;
 
-        if (has_json_csg)
-            floatTetWild::boolean_operation(mesh_copy, tree_with_ids);
-        else if (boolean_op >= 0)
-            floatTetWild::boolean_operation(mesh_copy, boolean_op);
-        else
+        if (!all_mesh)
         {
-            if (params.smooth_open_boundary)
-            {
-                floatTetWild::smooth_open_boundary(mesh_copy, *tree);
-                for (auto &t : mesh_copy.tets)
-                {
-                    if (t.is_outside)
-                        t.is_removed = true;
-                }
-            }
+            if (has_json_csg)
+                floatTetWild::boolean_operation(mesh_copy, tree_with_ids);
+            else if (boolean_op >= 0)
+                floatTetWild::boolean_operation(mesh_copy, boolean_op);
             else
-                filter_outside(mesh_copy);
-        }
+            {
+                if (params.smooth_open_boundary)
+                {
+                    floatTetWild::smooth_open_boundary(mesh_copy, *tree);
+                    for (auto &t : mesh_copy.tets)
+                    {
+                        if (t.is_outside)
+                            t.is_removed = true;
+                    }
+                }
+                else
+                    filter_outside(mesh_copy);
+            }
 
-        if (params.manifold_surface)
-        {
-            floatTetWild::manifold_surface(mesh_copy);
+            if (params.manifold_surface)
+            {
+                floatTetWild::manifold_surface(mesh_copy);
+            }
+
+            stats().record(StateInfo::wn_id, timer.getElapsedTimeInSec(), mesh_copy.get_v_num(), mesh_copy.get_t_num(),
+                           mesh_copy.get_max_energy(), mesh_copy.get_avg_energy());
         }
-        stats().record(StateInfo::wn_id, timer.getElapsedTimeInSec(), mesh_copy.get_v_num(), mesh_copy.get_t_num(),
-                       mesh_copy.get_max_energy(), mesh_copy.get_avg_energy());
         logger().info("after winding number");
         logger().info("#v = {}", mesh_copy.get_v_num());
         logger().info("#t = {}", mesh_copy.get_t_num());
@@ -495,14 +499,14 @@ void tetrahedralize(py::module &m)
                           t.save(path, smooth_open_boundary, manifold_surface, correct_surface_orientation);
                       },
                            "saves the output", py::arg("path"), py::arg("smooth_open_boundary") = false, py::arg("manifold_surface") = false, py::arg("correct_surface_orientation") = false)
-                      .def("get_tet_mesh", [](Tetrahedralizer &t, bool smooth_open_boundary, bool manifold_surface, bool correct_surface_orientation) {
+                      .def("get_tet_mesh", [](Tetrahedralizer &t, bool smooth_open_boundary, bool manifold_surface, bool correct_surface_orientation, bool all_mesh) {
                           Eigen::MatrixXd V;
                           Eigen::MatrixXi T;
-                          t.get_tet_mesh(smooth_open_boundary, manifold_surface, correct_surface_orientation, V, T);
+                          t.get_tet_mesh(smooth_open_boundary, manifold_surface, correct_surface_orientation, all_mesh, V, T);
 
                           return py::make_tuple(V, T);
                       },
-                           "saves the output", py::arg("smooth_open_boundary") = false, py::arg("manifold_surface") = false, py::arg("correct_surface_orientation") = false)
+                           "saves the output", py::arg("smooth_open_boundary") = false, py::arg("manifold_surface") = false, py::arg("correct_surface_orientation") = false, py::arg("all_mesh") = false)
                       .def("get_tet_mesh_from_csg", [](Tetrahedralizer &t, const py::object &csg_tree, bool smooth_open_boundary, bool manifold_surface, bool correct_surface_orientation) {
                           Eigen::MatrixXd V;
                           Eigen::MatrixXi T;
@@ -510,7 +514,7 @@ void tetrahedralize(py::module &m)
                           t.tree_with_ids = json::parse(tmp);
                           t.has_json_csg = true;
 
-                          t.get_tet_mesh(smooth_open_boundary, manifold_surface, correct_surface_orientation, V, T);
+                          t.get_tet_mesh(smooth_open_boundary, manifold_surface, correct_surface_orientation, false, V, T);
 
                           t.has_json_csg = false;
 
