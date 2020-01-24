@@ -3,7 +3,6 @@
 #include <floattetwild/Mesh.hpp>
 #include <floattetwild/MeshIO.hpp>
 #include <floattetwild/FloatTetDelaunay.h>
-#include <floattetwild/FloatTetCutting.h>
 #include <floattetwild/LocalOperations.h>
 #include <floattetwild/MeshImprovement.h>
 #include <floattetwild/Simplification.h>
