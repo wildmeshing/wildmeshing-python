@@ -7,3 +7,7 @@ __pycache__
 *.code-workspace
 *.so
 *.msh*
+*.stl
+dist
+wildmeshing/__init__.pyc
+*.html

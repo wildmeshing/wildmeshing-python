@@ -266,7 +266,7 @@ public:
 
         timer.start();
         simplify(input_vertices, input_faces, input_tags, *tree, params, skip_simplify);
-        tree->init_b_mesh_and_tree(input_vertices, input_faces);
+        tree->init_b_mesh_and_tree(input_vertices, input_faces, mesh);
         logger().info("preprocessing {}s", timer.getElapsedTimeInSec());
         logger().info("");
         stats().record(StateInfo::preprocessing_id, timer.getElapsedTimeInSec(), input_vertices.size(),
