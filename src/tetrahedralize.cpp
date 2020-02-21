@@ -447,13 +447,15 @@ public:
         T.resize(cnt_t, 4);
         index = 0;
 
+        const std::array<int, 4> new_indices = {{0, 1, 3, 2}};
+
         for (const int i : t_ids)
         {
             if (skip_tet(i))
                 continue;
             for (int j = 0; j < 4; j++)
             {
-                T(index, j) = old_2_new[mesh_copy.tets[i][j]];
+                T(index, j) = old_2_new[mesh_copy.tets[i][new_indices[j]]];
             }
             index++;
         }
