@@ -303,7 +303,7 @@ public:
         logger().info("correct_tracked_surface_orientation done");
     }
 
-    void save(const std::string &path, bool smooth_open_boundary, bool manifold_surface, bool correct_surface_orientation, bool binary, int boolean_op = -1)
+    void save(const std::string &path, bool smooth_open_boundary, bool floodfill, bool manifold_surface, bool correct_surface_orientation, bool binary, int boolean_op = -1)
     {
         igl::Timer timer;
 
@@ -344,7 +344,12 @@ public:
                 }
             }
             else
-                filter_outside(mesh_copy);
+            {
+                if (floodfill)
+                    filter_outside_floodfill(mesh_copy);
+                else
+                    filter_outside(mesh_copy);
+            }
         }
         if (params.manifold_surface)
         {
@@ -367,7 +372,7 @@ public:
             MeshIO::write_mesh(params.output_path + "_" + params.postfix + ".msh", mesh_copy, false, std::vector<double>(), binary);
     }
 
-    void get_tet_mesh(bool smooth_open_boundary, bool manifold_surface, bool correct_surface_orientation, bool all_mesh, Eigen::MatrixXd &V, Eigen::MatrixXi &T, int boolean_op = -1)
+    void get_tet_mesh(bool smooth_open_boundary, bool floodfill, bool manifold_surface, bool correct_surface_orientation, bool all_mesh, Eigen::MatrixXd &V, Eigen::MatrixXi &T, int boolean_op = -1)
     {
         igl::Timer timer;
 
@@ -400,8 +405,12 @@ public:
                             t.is_removed = true;
                     }
                 }
-                else
-                    filter_outside(mesh_copy);
+                else{
+                    if(floodfill)
+                        filter_outside_floodfill(mesh_copy);
+                    else
+                        filter_outside(mesh_copy);
+                }
             }
 
             if (params.manifold_surface)
@@ -496,37 +505,37 @@ void tetrahedralize(py::module &m)
 
                       .def("tetrahedralize", [](Tetrahedralizer &t) { t.tetrahedralize(); }, "tetrahedralized the mesh")
 
-                      .def("save", [](Tetrahedralizer &t, const std::string &path, bool smooth_open_boundary, bool manifold_surface, bool correct_surface_orientation, bool binary) {
-                          t.save(path, smooth_open_boundary, manifold_surface, correct_surface_orientation, binary);
+                      .def("save", [](Tetrahedralizer &t, const std::string &path, bool smooth_open_boundary, bool floodfill, bool manifold_surface, bool correct_surface_orientation, bool binary) {
+                          t.save(path, smooth_open_boundary, floodfill, manifold_surface, correct_surface_orientation, binary);
                       },
-                           "saves the output", py::arg("path"), py::arg("smooth_open_boundary") = false, py::arg("manifold_surface") = false, py::arg("correct_surface_orientation") = false, py::arg("binary") = true)
-                      .def("get_tet_mesh", [](Tetrahedralizer &t, bool smooth_open_boundary, bool manifold_surface, bool correct_surface_orientation, bool all_mesh) {
+                           "saves the output", py::arg("path"), py::arg("smooth_open_boundary") = false, py::arg("floodfill") = false, py::arg("manifold_surface") = false, py::arg("correct_surface_orientation") = false, py::arg("binary") = true)
+                      .def("get_tet_mesh", [](Tetrahedralizer &t, bool smooth_open_boundary, bool floodfill, bool manifold_surface, bool correct_surface_orientation, bool all_mesh) {
                           Eigen::MatrixXd V;
                           Eigen::MatrixXi T;
-                          t.get_tet_mesh(smooth_open_boundary, manifold_surface, correct_surface_orientation, all_mesh, V, T);
+                          t.get_tet_mesh(smooth_open_boundary, floodfill, manifold_surface, correct_surface_orientation, all_mesh, V, T);
 
                           return py::make_tuple(V, T);
                       },
-                           "gets the output", py::arg("smooth_open_boundary") = false, py::arg("manifold_surface") = false, py::arg("correct_surface_orientation") = false, py::arg("all_mesh") = false)
-                      .def("get_tet_mesh_from_csg", [](Tetrahedralizer &t, const py::object &csg_tree, bool smooth_open_boundary, bool manifold_surface, bool correct_surface_orientation) {
+                           "gets the output", py::arg("smooth_open_boundary") = false, py::arg("floodfill") = false, py::arg("manifold_surface") = false, py::arg("correct_surface_orientation") = false, py::arg("all_mesh") = false)
+                      .def("get_tet_mesh_from_csg", [](Tetrahedralizer &t, const py::object &csg_tree, bool manifold_surface, bool correct_surface_orientation) {
                           Eigen::MatrixXd V;
                           Eigen::MatrixXi T;
                           const std::string tmp = py::str(csg_tree);
                           t.tree_with_ids = json::parse(tmp);
                           t.has_json_csg = true;
 
-                          t.get_tet_mesh(smooth_open_boundary, manifold_surface, correct_surface_orientation, false, V, T);
+                          t.get_tet_mesh(false, false, manifold_surface, correct_surface_orientation, false, V, T);
 
                           t.has_json_csg = false;
 
                           return py::make_tuple(V, T);
                       },
-                           "gets the output from a csg tree", py::arg("csg_tree"), py::arg("smooth_open_boundary") = false, py::arg("manifold_surface") = false, py::arg("correct_surface_orientation") = false)
+                           "gets the output from a csg tree", py::arg("csg_tree"), py::arg("manifold_surface") = false, py::arg("correct_surface_orientation") = false)
                       .def("get_stats", [](const Tetrahedralizer &t) { return t.get_stats(); }, "returns the stats");
 
     tetra.doc() = "Wildmeshing tetrahedralizer";
 
-    m.def("tetrahedralize", [](const std::string &input, const std::string &output, double stop_quality, int max_its, int stage, int stop_p, double epsilon, double edge_length_r, bool mute_log, bool skip_simplify, bool smooth_open_boundary, bool manifold_surface, bool correct_surface_orientation, bool binary) {
+    m.def("tetrahedralize", [](const std::string &input, const std::string &output, double stop_quality, int max_its, int stage, int stop_p, double epsilon, double edge_length_r, bool mute_log, bool skip_simplify, bool smooth_open_boundary, bool floodfill, bool manifold_surface, bool correct_surface_orientation, bool binary) {
         wildmeshing_binding::init_globals();
 
         static bool initialized = false;
@@ -541,7 +550,7 @@ void tetrahedralize(py::module &m)
             return false;
 
         tetra.tetrahedralize();
-        tetra.save(output, smooth_open_boundary, manifold_surface, correct_surface_orientation, binary);
+        tetra.save(output, smooth_open_boundary, floodfill, manifold_surface, correct_surface_orientation, binary);
 
         return true;
     },
@@ -557,9 +566,9 @@ void tetrahedralize(py::module &m)
           py::arg("edge_length_r") = 1. / 20., // "Relative target edge length l_r. Absolute l = l_r * diagonal_of_bbox"
           py::arg("mute_log") = false,         // "Mute prints");
           py::arg("skip_simplify") = false,    //
-          py::arg("smooth_open_boundary") = false, py::arg("manifold_surface") = false, py::arg("correct_surface_orientation") = false, py::arg("binary") = true);
+          py::arg("smooth_open_boundary") = false, py::arg("floodfill") = false, py::arg("manifold_surface") = false, py::arg("correct_surface_orientation") = false, py::arg("binary") = true);
 
-    m.def("boolean_operation", [](const py::object &json, const std::string &output, double stop_quality, int max_its, int stage, int stop_p, double epsilon, double edge_length_r, bool mute_log, bool skip_simplify, bool smooth_open_boundary, bool manifold_surface, bool correct_surface_orientation, bool binary) {
+    m.def("boolean_operation", [](const py::object &json, const std::string &output, double stop_quality, int max_its, int stage, int stop_p, double epsilon, double edge_length_r, bool mute_log, bool skip_simplify, bool manifold_surface, bool correct_surface_orientation, bool binary) {
         wildmeshing_binding::init_globals();
 
         static bool initialized = false;
@@ -577,7 +586,7 @@ void tetrahedralize(py::module &m)
             return false;
 
         tetra.tetrahedralize();
-        tetra.save(output, smooth_open_boundary, manifold_surface, correct_surface_orientation, binary);
+        tetra.save(output, false, false, manifold_surface, correct_surface_orientation, binary);
 
         return true;
     },
@@ -593,6 +602,6 @@ void tetrahedralize(py::module &m)
           py::arg("edge_length_r") = 1. / 20., // "Relative target edge length l_r. Absolute l = l_r * diagonal_of_bbox"
           py::arg("mute_log") = false,         // "Mute prints");
           py::arg("skip_simplify") = false,    //
-          py::arg("smooth_open_boundary") = false, py::arg("manifold_surface") = false, py::arg("correct_surface_orientation") = false, py::arg("binary") = true);
+          py::arg("manifold_surface") = false, py::arg("correct_surface_orientation") = false, py::arg("binary") = true);
 }
 } // namespace wildmeshing_binding
