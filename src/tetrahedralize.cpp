@@ -16,6 +16,7 @@
 
 #include <igl/Timer.h>
 #include <igl/writeSTL.h>
+#include <igl/remove_unreferenced.h>
 
 #include <Eigen/Dense>
 
@@ -372,11 +373,13 @@ public:
             MeshIO::write_mesh(params.output_path + "_" + params.postfix + ".msh", mesh_copy, false, std::vector<double>(), binary);
     }
 
-    void get_tet_mesh(bool smooth_open_boundary, bool floodfill, bool manifold_surface, bool correct_surface_orientation, bool all_mesh, Eigen::MatrixXd &V, Eigen::MatrixXi &T, int boolean_op = -1)
+    void get_tet_mesh(bool smooth_open_boundary, bool floodfill, bool manifold_surface, bool correct_surface_orientation, bool all_mesh, Eigen::MatrixXd &Vs, Eigen::MatrixXi &Ts, int boolean_op = -1)
     {
         igl::Timer timer;
 
         Mesh mesh_copy = mesh;
+        Eigen::MatrixXd V;
+        Eigen::MatrixXi T;
 
         const auto skip_tet    = [&mesh_copy](const int i) { return mesh_copy.tets[i].is_removed; };
         const auto skip_vertex = [&mesh_copy](const int i) { return mesh_copy.tet_vertices[i].is_removed; };
@@ -468,6 +471,9 @@ public:
             }
             index++;
         }
+
+        Eigen::MatrixXi I;
+        igl::remove_unreferenced(V, T, Vs, Ts, I);
     }
 
     std::string get_stats() const
