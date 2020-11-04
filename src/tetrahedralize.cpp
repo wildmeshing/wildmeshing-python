@@ -55,7 +55,7 @@ namespace wildmeshing_binding
             Tetrahedralizer(
                 double stop_quality, int max_its, int stage, int stop_p,
                 double epsilon, double edge_length_r,
-                bool skip_simplify) : skip_simplify(skip_simplify)
+                bool skip_simplify, bool coarsen) : skip_simplify(skip_simplify)
             {
                 wildmeshing_binding::init_globals();
 
@@ -68,6 +68,8 @@ namespace wildmeshing_binding
                 params.max_its = max_its;
                 params.stage = stage;
                 params.stop_p = stop_p;
+
+                params.coarsen = coarsen;
 
                 params.eps_rel = epsilon;
                 params.ideal_edge_length_rel = edge_length_r;
@@ -601,15 +603,15 @@ namespace wildmeshing_binding
                           .def(py::init<
                                    double, int, int, int,
                                    double, double,
-                                   bool>(),
+                                   bool, bool>(),
                                py::arg("stop_quality") = 10,        // "Specify max AMIPS energy for stopping mesh optimization"
                                py::arg("max_its") = 80,             // "Max number of mesh optimization iterations"
                                py::arg("stage") = 2,                // "Specify envelope stage"
                                py::arg("stop_p") = -1,              //
                                py::arg("epsilon") = 1e-3,           // "relative envelope epsilon_r. Absolute epsilonn = epsilon_r * diagonal_of_bbox"
                                py::arg("edge_length_r") = 1. / 20., // "Relative target edge length l_r. Absolute l = l_r * diagonal_of_bbox"
-                               py::arg("skip_simplify") = false     //
-                               )
+                               py::arg("skip_simplify") = false,    //
+                               py::arg("coarsen") = true)
 
                           .def(
                               "set_log_level", [](Tetrahedralizer &t, int level) { t.set_log_level(level); }, "sets log level, valid value between 0 (all logs) and 6 (no logs)", py::arg("level"))
@@ -667,7 +669,7 @@ namespace wildmeshing_binding
         tetra.doc() = "Wildmeshing tetrahedralizer";
 
         m.def(
-            "tetrahedralize", [](const std::string &input, const std::string &output, double stop_quality, int max_its, int stage, int stop_p, double epsilon, double edge_length_r, bool mute_log, bool skip_simplify, bool smooth_open_boundary, bool floodfill, bool use_input_for_wn, bool manifold_surface, bool correct_surface_orientation, bool all_mesh, bool binary) {
+            "tetrahedralize", [](const std::string &input, const std::string &output, double stop_quality, int max_its, int stage, int stop_p, double epsilon, double edge_length_r, bool mute_log, bool skip_simplify, bool coarsen, bool smooth_open_boundary, bool floodfill, bool use_input_for_wn, bool manifold_surface, bool correct_surface_orientation, bool all_mesh, bool binary) {
                 wildmeshing_binding::init_globals();
 
                 static bool initialized = false;
@@ -677,7 +679,7 @@ namespace wildmeshing_binding
                     initialized = true;
                 }
 
-                Tetrahedralizer tetra(stop_quality, max_its, stage, stop_p, epsilon, edge_length_r, skip_simplify);
+                Tetrahedralizer tetra(stop_quality, max_its, stage, stop_p, epsilon, edge_length_r, skip_simplify, coarsen);
                 if (!tetra.load_mesh(input))
                     return false;
 
@@ -698,10 +700,10 @@ namespace wildmeshing_binding
             py::arg("edge_length_r") = 1. / 20., // "Relative target edge length l_r. Absolute l = l_r * diagonal_of_bbox"
             py::arg("mute_log") = false,         // "Mute prints");
             py::arg("skip_simplify") = false,    //
-            py::arg("smooth_open_boundary") = false, py::arg("floodfill") = false, py::arg("manifold_surface") = false, py::arg("use_input_for_wn") = false, py::arg("correct_surface_orientation") = false, py::arg("all_mesh") = false, py::arg("binary") = true);
+            py::arg("coarsen") = true, py::arg("smooth_open_boundary") = false, py::arg("floodfill") = false, py::arg("manifold_surface") = false, py::arg("use_input_for_wn") = false, py::arg("correct_surface_orientation") = false, py::arg("all_mesh") = false, py::arg("binary") = true);
 
         m.def(
-            "boolean_operation", [](const py::object &json, const std::string &output, double stop_quality, int max_its, int stage, int stop_p, double epsilon, double edge_length_r, bool mute_log, bool skip_simplify, bool manifold_surface, bool use_input_for_wn, bool correct_surface_orientation, bool all_mesh, bool binary) {
+            "boolean_operation", [](const py::object &json, const std::string &output, double stop_quality, int max_its, int stage, int stop_p, double epsilon, double edge_length_r, bool mute_log, bool skip_simplify, bool coarsen, bool manifold_surface, bool use_input_for_wn, bool correct_surface_orientation, bool all_mesh, bool binary) {
                 wildmeshing_binding::init_globals();
 
                 static bool initialized = false;
@@ -711,7 +713,7 @@ namespace wildmeshing_binding
                     initialized = true;
                 }
 
-                Tetrahedralizer tetra(stop_quality, max_its, stage, stop_p, epsilon, edge_length_r, skip_simplify);
+                Tetrahedralizer tetra(stop_quality, max_its, stage, stop_p, epsilon, edge_length_r, skip_simplify, coarsen);
 
                 const std::string tmp = py::str(json);
 
@@ -735,6 +737,6 @@ namespace wildmeshing_binding
             py::arg("edge_length_r") = 1. / 20., // "Relative target edge length l_r. Absolute l = l_r * diagonal_of_bbox"
             py::arg("mute_log") = false,         // "Mute prints");
             py::arg("skip_simplify") = false,    //
-            py::arg("manifold_surface") = false, py::arg("use_input_for_wn") = false, py::arg("correct_surface_orientation") = false, py::arg("all_mesh") = false, py::arg("binary") = true);
+            py::arg("coarsen") = true, py::arg("manifold_surface") = false, py::arg("use_input_for_wn") = false, py::arg("correct_surface_orientation") = false, py::arg("all_mesh") = false, py::arg("binary") = true);
     }
 } // namespace wildmeshing_binding

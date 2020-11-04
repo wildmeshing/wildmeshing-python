@@ -93,7 +93,8 @@ def tetrahedralize():
                         default=False, help="Smooth the open boundary.")
     parser.add_argument("--manifold-surface", type=bool,
                         default=False, help="Force the output to be manifold.")
-    # parser.add_argument("--coarsen", type=bool, default=True, "Coarsen the output as much as possible.")
+    parser.add_argument("--coarsen", type=bool, default=True,
+                        help="Coarsen the output as much as possible.")
     parser.add_argument("--csg", type=str, default="",
                         help="json file containg a csg tree")
 
@@ -114,7 +115,8 @@ def tetrahedralize():
     tetra = wm.Tetrahedralizer(stop_quality=args.stop_energy,
                                epsilon=args.epsr,
                                edge_length_r=args.lr,
-                               skip_simplify=args.skip_simplify)
+                               skip_simplify=args.skip_simplify,
+                               coarsen=args.coarsen)
     tetra.set_log_level(args.level)
 
     if(len(args.bg_mesh) > 0):
