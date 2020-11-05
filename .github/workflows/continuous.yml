@@ -1,0 +1,74 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+env:
+  CTEST_OUTPUT_ON_FAILURE: ON
+  CTEST_PARALLEL_LEVEL: 2
+
+jobs:
+  Build:
+    name: ${{ matrix.name }} (${{ matrix.config }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-18.04, macos-latest, windows-2019]
+        config: [Debug, Release]
+        include:
+          - os: ubuntu-18.04
+            name: Linux
+          - os: windows-2019
+            name: Windows
+          - os: macos-latest
+            name: macOS
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v1
+        with:
+          fetch-depth: 10
+          submodules: "recursive"
+
+      - name: Setup NMake (Windows)
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Stetup Conda
+        uses: s-weigand/setup-conda@v1
+        with:
+          conda-channels: anaconda, conda-forge
+          python-version: 3.6
+
+      - name: Install Dependencies
+        run: conda install numpy svgwrite -y
+
+      - name: Install Dependencies  (Windows)
+        if: runner.os == 'Windows'
+        run: conda install mpir -y
+
+      - name: Envs (Windows)
+        if: runner.os == 'Windows'
+        run: echo "CMAKE_GENERATOR=NMake Makefiles" >> $GITHUB_ENV
+
+      - name: Build (Debug)
+        if: matrix.config == 'Debug'
+        run: python setup.py build --debug install
+
+      - name: Build (Release)
+        if: matrix.config == 'Release'
+        run: python setup.py build install
+
+      - name: Tri Tests
+        run: |
+          python test/tri_test.py
+
+      - name: Tet Tests
+        if: matrix.config == 'Release'
+        run: |
+          python test/tet_test.py

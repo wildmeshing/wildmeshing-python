@@ -93,7 +93,7 @@ setup(
     ],
     python_requires='>=3.6',
     install_requires=[
-        'pycparser',
+        'svgwrite',
         'numpy',
         'argparse'],
     entry_points={
