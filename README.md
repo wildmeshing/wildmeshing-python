@@ -1,4 +1,5 @@
 # Wildmeshing python bindings
+![Build](https://github.com/wildmeshing/wildmeshing-python/workflows/Build/badge.svg)
 
 python interface to **triangulate** and **tetrahedralize**
 
