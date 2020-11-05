@@ -32,3 +32,4 @@ class TriangulateTest(unittest.TestCase):
         tetra = wm.Tetrahedralizer()
         tetra.set_mesh(cubeV, cubeF)
         tetra.tetrahedralize()
+        VT, TT, _ = tetra.get_tet_mesh()
