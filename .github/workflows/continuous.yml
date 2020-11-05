@@ -19,13 +19,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-18.04, windows-2019]
+        os: [ubuntu-18.04, macos-latest, windows-2019]
         config: [Debug, Release]
         include:
           - os: ubuntu-18.04
             name: Linux
           - os: windows-2019
             name: Windows
+          - os: macos-latest
+            name: macOS
     steps:
       - name: Checkout repository
         uses: actions/checkout@v1
@@ -44,7 +46,7 @@ jobs:
           python-version: 3.6
 
       - name: Install Dependencies
-        run: conda install numpy libblas libcblas svgwrite -y
+        run: conda install numpy svgwrite -y
 
       - name: Install Dependencies  (Windows)
         if: runner.os == 'Windows'
