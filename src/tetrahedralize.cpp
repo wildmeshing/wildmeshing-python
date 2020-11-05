@@ -131,7 +131,13 @@ namespace wildmeshing_binding
                     }
                 }
 
+                //TODO: add params.input_epsr_tags
+
+#ifdef NEW_ENVELOPE
+                if (!MeshIO::load_mesh(params.input_path, input_vertices, input_faces, sf_mesh, input_tags, params.input_epsr_tags))
+#else
                 if (!MeshIO::load_mesh(params.input_path, input_vertices, input_faces, sf_mesh, input_tags))
+#endif
                 {
                     throw std::invalid_argument("Invalid mesh path at " + params.input_path);
                     return false;
@@ -145,7 +151,8 @@ namespace wildmeshing_binding
                 return load_mesh_aux();
             }
 
-            bool boolean_operation(const std::string &json_string)
+            bool
+            boolean_operation(const std::string &json_string)
             {
                 json csg_tree;
                 std::ifstream file(json_string);
@@ -196,7 +203,15 @@ namespace wildmeshing_binding
                     input_faces[i][2] = F(i, 2);
                 }
 
+                Parameters &params = mesh.params;
+
+#ifdef NEW_ENVELOPE
                 MeshIO::load_mesh(input_vertices, input_faces, sf_mesh, input_tags);
+                //TODO:
+                // MeshIO::load_mesh(input_vertices, input_faces, sf_mesh, input_tags, params.input_epsr_tags);
+#else
+                MeshIO::load_mesh(input_vertices, input_faces, sf_mesh, input_tags);
+#endif
 
                 load_mesh_aux();
             }
@@ -353,6 +368,14 @@ namespace wildmeshing_binding
                     throw std::invalid_argument("Unable to initialize the tree, probably a problem with the mesh");
                     return false;
                 }
+
+#ifdef NEW_ENVELOPE
+                //TODO!
+                // if (!epsr_tags.empty())
+                // tree->init_sf_tree(input_vertices, input_faces, params.input_epsr_tags, params.bbox_diag_length);
+                // else
+                tree->init_sf_tree(input_vertices, input_faces, params.eps);
+#endif
 
                 stats().record(StateInfo::init_id, 0, input_vertices.size(), input_faces.size(), -1, -1);
                 return true;
