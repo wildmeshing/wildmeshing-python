@@ -106,7 +106,7 @@ namespace wildmeshing_binding
                 spdlog::flush_every(std::chrono::seconds(3));
             }
 
-            bool load_mesh(const std::string &path, const std::string &tag_path = "")
+            bool load_mesh(const std::string &path, const std::string &tag_path, const std::vector<double> &epsr_tags)
             {
                 Parameters &params = mesh.params;
                 params.input_path = path;
@@ -131,7 +131,7 @@ namespace wildmeshing_binding
                     }
                 }
 
-                //TODO: add params.input_epsr_tags
+                params.input_epsr_tags = epsr_tags;
 
 #ifdef NEW_ENVELOPE
                 if (!MeshIO::load_mesh(params.input_path, input_vertices, input_faces, sf_mesh, input_tags, params.input_epsr_tags))
@@ -146,6 +146,15 @@ namespace wildmeshing_binding
                 {
                     throw std::invalid_argument("Invalid mesh path at " + params.input_path);
                     return false;
+                }
+
+                if (!params.input_epsr_tags.empty())
+                {
+                    if (params.input_epsr_tags.size() != input_vertices.size())
+                    {
+                        throw std::invalid_argument("epsr_tags need to be same size as vertices, " + std::to_string(params.input_epsr_tags.size()) + " vs " + std::to_string(input_vertices.size()));
+                        return false;
+                    }
                 }
 
                 return load_mesh_aux();
@@ -180,7 +189,7 @@ namespace wildmeshing_binding
                 return ok;
             }
 
-            void set_mesh(const Eigen::MatrixXd &V, const Eigen::MatrixXi &F)
+            void set_mesh(const Eigen::MatrixXd &V, const Eigen::MatrixXi &F, const std::vector<double> &epsr_tags)
             {
                 if (F.cols() != 3)
                     throw std::invalid_argument("Mesh format not supported, F should have 3 cols");
@@ -204,11 +213,18 @@ namespace wildmeshing_binding
                 }
 
                 Parameters &params = mesh.params;
+                params.input_epsr_tags = epsr_tags;
+
+                if (!params.input_epsr_tags.empty())
+                {
+                    if (params.input_epsr_tags.size() != input_vertices.size())
+                    {
+                        throw std::invalid_argument("epsr_tags need to be same size as vertices, " + std::to_string(params.input_epsr_tags.size()) + " vs " + std::to_string(input_vertices.size()));
+                    }
+                }
 
 #ifdef NEW_ENVELOPE
-                MeshIO::load_mesh(input_vertices, input_faces, sf_mesh, input_tags);
-                //TODO:
-                // MeshIO::load_mesh(input_vertices, input_faces, sf_mesh, input_tags, params.input_epsr_tags);
+                MeshIO::load_mesh(input_vertices, input_faces, sf_mesh, input_tags, params.input_epsr_tags);
 #else
                 MeshIO::load_mesh(input_vertices, input_faces, sf_mesh, input_tags);
 #endif
@@ -370,11 +386,10 @@ namespace wildmeshing_binding
                 }
 
 #ifdef NEW_ENVELOPE
-                //TODO!
-                // if (!epsr_tags.empty())
-                // tree->init_sf_tree(input_vertices, input_faces, params.input_epsr_tags, params.bbox_diag_length);
-                // else
-                tree->init_sf_tree(input_vertices, input_faces, params.eps);
+                if (!params.input_epsr_tags.empty())
+                    tree->init_sf_tree(input_vertices, input_faces, params.input_epsr_tags, params.bbox_diag_length);
+                else
+                    tree->init_sf_tree(input_vertices, input_faces, params.eps);
 #endif
 
                 stats().record(StateInfo::init_id, 0, input_vertices.size(), input_faces.size(), -1, -1);
@@ -502,7 +517,7 @@ namespace wildmeshing_binding
                     MeshIO::write_mesh(params.output_path + "_" + params.postfix + ".msh", mesh_copy, false, std::vector<double>(), binary);
             }
 
-            void get_tet_mesh(bool smooth_open_boundary, bool floodfill, bool manifold_surface, bool use_input_for_wn, bool correct_surface_orientation, bool all_mesh, Eigen::MatrixXd &Vs, Eigen::MatrixXi &Ts, int boolean_op = -1)
+            void get_tet_mesh(bool smooth_open_boundary, bool floodfill, bool manifold_surface, bool use_input_for_wn, bool correct_surface_orientation, bool all_mesh, Eigen::MatrixXd &Vs, Eigen::MatrixXi &Ts, Eigen::MatrixXd &flags, int boolean_op = -1)
             {
                 igl::Timer timer;
 
@@ -591,6 +606,7 @@ namespace wildmeshing_binding
                 }
 
                 T.resize(cnt_t, 4);
+                flags.resize(cnt_t, 1);
                 index = 0;
 
                 const std::array<int, 4> new_indices = {{0, 1, 3, 2}};
@@ -603,6 +619,7 @@ namespace wildmeshing_binding
                     {
                         T(index, j) = old_2_new[mesh_copy.tets[i][new_indices[j]]];
                     }
+                    flags(index) = mesh_copy.tets[i].scalar;
                     index++;
                 }
 
@@ -640,7 +657,7 @@ namespace wildmeshing_binding
                               "set_log_level", [](Tetrahedralizer &t, int level) { t.set_log_level(level); }, "sets log level, valid value between 0 (all logs) and 6 (no logs)", py::arg("level"))
 
                           .def(
-                              "load_mesh", [](Tetrahedralizer &t, const std::string &path) { t.load_mesh(path); }, "loads a mesh", py::arg("path"))
+                              "load_mesh", [](Tetrahedralizer &t, const std::string &path, const std::vector<double> &epsr_tags) { t.load_mesh(path, "", epsr_tags); }, "loads a mesh", py::arg("path"), py::arg("epsr_tags") = std::vector<double>())
                           .def(
                               "load_sizing_field", [](Tetrahedralizer &t, const std::string &path) { t.set_sizing_field(path); }, "load sizing field", py::arg("path"))
                           .def(
@@ -648,7 +665,7 @@ namespace wildmeshing_binding
                           .def(
                               "set_sizing_field_from_func", [](Tetrahedralizer &t, std::function<double(const Vector3 &p)> &field) { t.set_sizing_field(field); }, "set sizing field", py::arg("field"))
                           .def(
-                              "set_mesh", [](Tetrahedralizer &t, const Eigen::MatrixXd &V, const Eigen::MatrixXi &F) { t.set_mesh(V, F); }, "sets a mesh", py::arg("V"), py::arg("F"))
+                              "set_mesh", [](Tetrahedralizer &t, const Eigen::MatrixXd &V, const Eigen::MatrixXi &F, const std::vector<double> &epsr_tags) { t.set_mesh(V, F, epsr_tags); }, "sets a mesh", py::arg("V"), py::arg("F"), py::arg("epsr_tags") = std::vector<double>())
                           .def(
                               "set_meshes", [](Tetrahedralizer &t, const std::vector<Eigen::MatrixXd> &V, const std::vector<Eigen::MatrixXi> &F) { t.set_meshes(V, F); }, "sets several meshes, for boolean", py::arg("V"), py::arg("F"))
                           .def(
@@ -666,24 +683,26 @@ namespace wildmeshing_binding
                               "get_tet_mesh", [](Tetrahedralizer &t, bool smooth_open_boundary, bool floodfill, bool use_input_for_wn, bool manifold_surface, bool correct_surface_orientation, bool all_mesh) {
                                   Eigen::MatrixXd V;
                                   Eigen::MatrixXi T;
-                                  t.get_tet_mesh(smooth_open_boundary, floodfill, manifold_surface, use_input_for_wn, correct_surface_orientation, all_mesh, V, T);
+                                  Eigen::MatrixXd tags;
+                                  t.get_tet_mesh(smooth_open_boundary, floodfill, manifold_surface, use_input_for_wn, correct_surface_orientation, all_mesh, V, T, tags);
 
-                                  return py::make_tuple(V, T);
+                                  return py::make_tuple(V, T, tags);
                               },
                               "gets the output", py::arg("smooth_open_boundary") = false, py::arg("floodfill") = false, py::arg("use_input_for_wn") = false, py::arg("manifold_surface") = false, py::arg("correct_surface_orientation") = false, py::arg("all_mesh") = false)
                           .def(
                               "get_tet_mesh_from_csg", [](Tetrahedralizer &t, const py::object &csg_tree, bool manifold_surface, bool use_input_for_wn, bool correct_surface_orientation) {
                                   Eigen::MatrixXd V;
                                   Eigen::MatrixXi T;
+                                  Eigen::MatrixXd tags;
                                   const std::string tmp = py::str(csg_tree);
                                   t.tree_with_ids = json::parse(tmp);
                                   t.has_json_csg = true;
 
-                                  t.get_tet_mesh(false, false, manifold_surface, use_input_for_wn, correct_surface_orientation, false, V, T);
+                                  t.get_tet_mesh(false, false, manifold_surface, use_input_for_wn, correct_surface_orientation, false, V, T, tags);
 
                                   t.has_json_csg = false;
 
-                                  return py::make_tuple(V, T);
+                                  return py::make_tuple(V, T, tags);
                               },
                               "gets the output from a csg tree", py::arg("csg_tree"), py::arg("manifold_surface") = false, py::arg("use_input_for_wn") = false, py::arg("correct_surface_orientation") = false)
                           .def(
@@ -703,7 +722,7 @@ namespace wildmeshing_binding
                 }
 
                 Tetrahedralizer tetra(stop_quality, max_its, stage, stop_p, epsilon, edge_length_r, skip_simplify, coarsen);
-                if (!tetra.load_mesh(input))
+                if (!tetra.load_mesh(input, "", std::vector<double>()))
                     return false;
 
                 tetra.tetrahedralize();
