@@ -64,11 +64,12 @@ jobs:
         if: matrix.config == 'Release'
         run: python setup.py build install
 
-      - name: Tri Tests
+      - name: Fast Tests
         run: |
           python test/tri_test.py
+          python test/small_tet_test.py
 
-      - name: Tet Tests
+      - name: Slow Tests
         if: matrix.config == 'Release'
         run: |
           python test/tet_test.py
