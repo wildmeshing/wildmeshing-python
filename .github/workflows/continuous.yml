@@ -44,7 +44,7 @@ jobs:
           python-version: 3.6
 
       - name: Install Dependencies
-        run: conda install numpy libblas libcblas -y
+        run: conda install numpy libblas libcblas svgwrite -y
 
       - name: Install Dependencies  (Windows)
         if: runner.os == 'Windows'
