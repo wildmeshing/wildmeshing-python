@@ -64,7 +64,11 @@ jobs:
         if: matrix.config == 'Release'
         run: python setup.py build install
 
-      - name: Tests
+      - name: Tri Tests
         run: |
           python test/tri_test.py
+
+      - name: Tet Tests
+        if: matrix.config == 'Release'
+        run: |
           python test/tet_test.py
