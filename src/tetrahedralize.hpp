@@ -1,6 +1,8 @@
 #pragma once
 
+#ifndef WILDMESHING_SKIP_BINDINGS
 #include "Utils.hpp"
+#endif
 
 #include <floattetwild/Mesh.hpp>
 #include <floattetwild/AABBWrapper.h>
