@@ -287,7 +287,14 @@ namespace wildmeshing_binding
             {
                 assert(V.cols() == 3);
                 assert(T.cols() == 4);
-                assert(values.size() == T.rows());
+                assert(values.size() == V.rows());
+
+                if (V.cols() != 3)
+                    throw std::invalid_argument("V should have 3 cols");
+                if (T.cols() != 4)
+                    throw std::invalid_argument("T should have 3 cols");
+                if (values.size() != V.rows())
+                    throw std::invalid_argument("values should have the same length as V.rows()");
 
                 Eigen::VectorXd V_in(V.size());
                 Eigen::VectorXi T_in(T.size());
@@ -310,11 +317,11 @@ namespace wildmeshing_binding
             }
 
         private:
-            void set_sizing_field(const Eigen::VectorXd &V_in, Eigen::VectorXi &T_in, const Eigen::VectorXd &values)
+            void set_sizing_field(const Eigen::VectorXd &V_in, const Eigen::VectorXi &T_in, const Eigen::VectorXd &values)
             {
                 Parameters &params = mesh.params;
                 params.apply_sizing_field = true;
-                params.get_sizing_field_value = [&V_in, &T_in, &values](const Vector3 &p) {
+                params.get_sizing_field_value = [V_in, T_in, values](const Vector3 &p) {
                     GEO::Mesh bg_mesh;
                     bg_mesh.vertices.clear();
                     bg_mesh.vertices.create_vertices((int)V_in.rows() / 3);
