@@ -57,6 +57,7 @@ namespace wildmeshing_binding
 
         void save(const std::string &path, bool smooth_open_boundary, bool floodfill, bool manifold_surface, bool use_input_for_wn, bool correct_surface_orientation, bool all_mesh, bool binary, int boolean_op = -1);
         void get_tet_mesh(bool smooth_open_boundary, bool floodfill, bool manifold_surface, bool use_input_for_wn, bool correct_surface_orientation, bool all_mesh, Eigen::MatrixXd &Vs, Eigen::MatrixXi &Ts, Eigen::MatrixXd &flags, int boolean_op = -1);
+        void get_tracked_surfaces(std::vector<Eigen::Matrix<double, Eigen::Dynamic, 3>> &Vt, std::vector<Eigen::Matrix<int, Eigen::Dynamic, 3>> &Ft);
         std::string get_stats() const;
     };
 #ifndef WILDMESHING_SKIP_BINDINGS

@@ -293,7 +293,8 @@ namespace wildmeshing_binding
     {
         Parameters &params = mesh.params;
         params.apply_sizing_field = true;
-        params.get_sizing_field_value = [V_in, T_in, values](const Vector3 &p) {
+        params.get_sizing_field_value = [V_in, T_in, values](const Vector3 &p)
+        {
             GEO::Mesh bg_mesh;
             bg_mesh.vertices.clear();
             bg_mesh.vertices.create_vertices((int)V_in.rows() / 3);
@@ -504,8 +505,10 @@ namespace wildmeshing_binding
         Eigen::MatrixXd Vout;
         Eigen::MatrixXi Fout;
 
-        const auto skip_tet = [&mesh_copy](const int i) { return mesh_copy.tets[i].is_removed; };
-        const auto skip_vertex = [&mesh_copy](const int i) { return mesh_copy.tet_vertices[i].is_removed; };
+        const auto skip_tet = [&mesh_copy](const int i)
+        { return mesh_copy.tets[i].is_removed; };
+        const auto skip_vertex = [&mesh_copy](const int i)
+        { return mesh_copy.tet_vertices[i].is_removed; };
         std::vector<int> t_ids(mesh_copy.tets.size());
         std::iota(std::begin(t_ids), std::end(t_ids), 0);
 
@@ -603,6 +606,28 @@ namespace wildmeshing_binding
         igl::remove_unreferenced(V, T, Vs, Ts, I);
     }
 
+    void Tetrahedralizer::get_tracked_surfaces(std::vector<Eigen::Matrix<double, Eigen::Dynamic, 3>> &Vt, std::vector<Eigen::Matrix<int, Eigen::Dynamic, 3>> &Ft)
+    {
+        if (has_json_csg)
+        {
+            int max_id = CSGTreeParser::get_max_id(tree_with_ids);
+
+            for (int i = 0; i <= max_id; ++i)
+            {
+                Vt.emplace_back();
+                Ft.emplace_back();
+
+                get_tracked_surface(mesh, Vt.back(), Ft.back(), i);
+            }
+        }
+        else
+        {
+            Vt.emplace_back();
+            Ft.emplace_back();
+            get_tracked_surface(mesh, Vt.back(), Ft.back());
+        }
+    }
+
     std::string Tetrahedralizer::get_stats() const
     {
         std::stringstream ss;
@@ -628,33 +653,54 @@ namespace wildmeshing_binding
                                py::arg("coarsen") = true)
 
                           .def(
-                              "set_log_level", [](Tetrahedralizer &t, int level) { t.set_log_level(level); }, "sets log level, valid value between 0 (all logs) and 6 (no logs)", py::arg("level"))
+                              "set_log_level", [](Tetrahedralizer &t, int level)
+                              { t.set_log_level(level); },
+                              "sets log level, valid value between 0 (all logs) and 6 (no logs)", py::arg("level"))
 
                           .def(
-                              "load_mesh", [](Tetrahedralizer &t, const std::string &path, const std::vector<double> &epsr_tags) { t.load_mesh(path, "", epsr_tags); }, "loads a mesh", py::arg("path"), py::arg("epsr_tags") = std::vector<double>())
+                              "load_mesh", [](Tetrahedralizer &t, const std::string &path, const std::vector<double> &epsr_tags)
+                              { t.load_mesh(path, "", epsr_tags); },
+                              "loads a mesh", py::arg("path"), py::arg("epsr_tags") = std::vector<double>())
                           .def(
-                              "load_sizing_field", [](Tetrahedralizer &t, const std::string &path) { t.set_sizing_field(path); }, "load sizing field", py::arg("path"))
+                              "load_sizing_field", [](Tetrahedralizer &t, const std::string &path)
+                              { t.set_sizing_field(path); },
+                              "load sizing field", py::arg("path"))
                           .def(
-                              "set_sizing_field", [](Tetrahedralizer &t, const Eigen::MatrixXd &V, Eigen::MatrixXi &T, const Eigen::VectorXd &values) { t.set_sizing_field(V, T, values); }, "set sizing field", py::arg("V"), py::arg("T"), py::arg("values"))
+                              "set_sizing_field", [](Tetrahedralizer &t, const Eigen::MatrixXd &V, Eigen::MatrixXi &T, const Eigen::VectorXd &values)
+                              { t.set_sizing_field(V, T, values); },
+                              "set sizing field", py::arg("V"), py::arg("T"), py::arg("values"))
                           .def(
-                              "set_sizing_field_from_func", [](Tetrahedralizer &t, std::function<double(const Vector3 &p)> &field) { t.set_sizing_field(field); }, "set sizing field", py::arg("field"))
+                              "set_sizing_field_from_func", [](Tetrahedralizer &t, std::function<double(const Vector3 &p)> &field)
+                              { t.set_sizing_field(field); },
+                              "set sizing field", py::arg("field"))
                           .def(
-                              "set_mesh", [](Tetrahedralizer &t, const Eigen::MatrixXd &V, const Eigen::MatrixXi &F, const std::vector<double> &epsr_tags) { t.set_mesh(V, F, epsr_tags); }, "sets a mesh", py::arg("V"), py::arg("F"), py::arg("epsr_tags") = std::vector<double>())
+                              "set_mesh", [](Tetrahedralizer &t, const Eigen::MatrixXd &V, const Eigen::MatrixXi &F, const std::vector<double> &epsr_tags)
+                              { t.set_mesh(V, F, epsr_tags); },
+                              "sets a mesh", py::arg("V"), py::arg("F"), py::arg("epsr_tags") = std::vector<double>())
                           .def(
-                              "set_meshes", [](Tetrahedralizer &t, const std::vector<Eigen::MatrixXd> &V, const std::vector<Eigen::MatrixXi> &F) { t.set_meshes(V, F); }, "sets several meshes, for boolean", py::arg("V"), py::arg("F"))
+                              "set_meshes", [](Tetrahedralizer &t, const std::vector<Eigen::MatrixXd> &V, const std::vector<Eigen::MatrixXi> &F)
+                              { t.set_meshes(V, F); },
+                              "sets several meshes, for boolean", py::arg("V"), py::arg("F"))
                           .def(
-                              "load_csg_tree", [](Tetrahedralizer &t, const py::object &csg_tree) {  const std::string tmp = py::str(csg_tree); t.boolean_operation(tmp); }, "loads a csg tree, either from file or json", py::arg("csg_tree"))
-
-                          .def(
-                              "tetrahedralize", [](Tetrahedralizer &t) { t.tetrahedralize(); }, "tetrahedralized the mesh")
-
-                          .def(
-                              "save", [](Tetrahedralizer &t, const std::string &path, bool smooth_open_boundary, bool floodfill, bool use_input_for_wn, bool manifold_surface, bool correct_surface_orientation, bool all_mesh, bool binary) {
-                                  t.save(path, smooth_open_boundary, floodfill, use_input_for_wn, manifold_surface, correct_surface_orientation, all_mesh, binary);
+                              "load_csg_tree", [](Tetrahedralizer &t, const py::object &csg_tree)
+                              {
+                                  const std::string tmp = py::str(csg_tree);
+                                  t.boolean_operation(tmp);
                               },
+                              "loads a csg tree, either from file or json", py::arg("csg_tree"))
+
+                          .def(
+                              "tetrahedralize", [](Tetrahedralizer &t)
+                              { t.tetrahedralize(); },
+                              "tetrahedralized the mesh")
+
+                          .def(
+                              "save", [](Tetrahedralizer &t, const std::string &path, bool smooth_open_boundary, bool floodfill, bool use_input_for_wn, bool manifold_surface, bool correct_surface_orientation, bool all_mesh, bool binary)
+                              { t.save(path, smooth_open_boundary, floodfill, use_input_for_wn, manifold_surface, correct_surface_orientation, all_mesh, binary); },
                               "saves the output", py::arg("path"), py::arg("smooth_open_boundary") = false, py::arg("floodfill") = false, py::arg("use_input_for_wn") = false, py::arg("manifold_surface") = false, py::arg("correct_surface_orientation") = false, py::arg("all_mesh") = false, py::arg("binary") = true)
                           .def(
-                              "get_tet_mesh", [](Tetrahedralizer &t, bool smooth_open_boundary, bool floodfill, bool use_input_for_wn, bool manifold_surface, bool correct_surface_orientation, bool all_mesh) {
+                              "get_tet_mesh", [](Tetrahedralizer &t, bool smooth_open_boundary, bool floodfill, bool use_input_for_wn, bool manifold_surface, bool correct_surface_orientation, bool all_mesh)
+                              {
                                   Eigen::MatrixXd V;
                                   Eigen::MatrixXi T;
                                   Eigen::MatrixXd tags;
@@ -664,7 +710,19 @@ namespace wildmeshing_binding
                               },
                               "gets the output", py::arg("smooth_open_boundary") = false, py::arg("floodfill") = false, py::arg("use_input_for_wn") = false, py::arg("manifold_surface") = false, py::arg("correct_surface_orientation") = false, py::arg("all_mesh") = false)
                           .def(
-                              "get_tet_mesh_from_csg", [](Tetrahedralizer &t, const py::object &csg_tree, bool manifold_surface, bool use_input_for_wn, bool correct_surface_orientation) {
+                              "get_tracked_surfaces", [](Tetrahedralizer &t)
+                              {
+                                  std::vector<Eigen::Matrix<double, Eigen::Dynamic, 3>> Vt;
+                                  std::vector<Eigen::Matrix<int, Eigen::Dynamic, 3>> Ft;
+                                  Eigen::MatrixXd tags;
+                                  t.get_tracked_surfaces(Vt, Ft);
+
+                                  return py::make_tuple(Vt, Ft);
+                              },
+                              "gets the tracked surfaces")
+                          .def(
+                              "get_tet_mesh_from_csg", [](Tetrahedralizer &t, const py::object &csg_tree, bool manifold_surface, bool use_input_for_wn, bool correct_surface_orientation)
+                              {
                                   Eigen::MatrixXd V;
                                   Eigen::MatrixXi T;
                                   Eigen::MatrixXd tags;
@@ -680,12 +738,15 @@ namespace wildmeshing_binding
                               },
                               "gets the output from a csg tree", py::arg("csg_tree"), py::arg("manifold_surface") = false, py::arg("use_input_for_wn") = false, py::arg("correct_surface_orientation") = false)
                           .def(
-                              "get_stats", [](const Tetrahedralizer &t) { return t.get_stats(); }, "returns the stats");
+                              "get_stats", [](const Tetrahedralizer &t)
+                              { return t.get_stats(); },
+                              "returns the stats");
 
         tetra.doc() = "Wildmeshing tetrahedralizer";
 
         m.def(
-            "tetrahedralize", [](const std::string &input, const std::string &output, double stop_quality, int max_its, int stage, int stop_p, double epsilon, double edge_length_r, bool mute_log, bool skip_simplify, bool coarsen, bool smooth_open_boundary, bool floodfill, bool use_input_for_wn, bool manifold_surface, bool correct_surface_orientation, bool all_mesh, bool binary) {
+            "tetrahedralize", [](const std::string &input, const std::string &output, double stop_quality, int max_its, int stage, int stop_p, double epsilon, double edge_length_r, bool mute_log, bool skip_simplify, bool coarsen, bool smooth_open_boundary, bool floodfill, bool use_input_for_wn, bool manifold_surface, bool correct_surface_orientation, bool all_mesh, bool binary)
+            {
                 wildmeshing_binding::init_globals();
 
                 static bool initialized = false;
@@ -719,7 +780,8 @@ namespace wildmeshing_binding
             py::arg("coarsen") = true, py::arg("smooth_open_boundary") = false, py::arg("floodfill") = false, py::arg("manifold_surface") = false, py::arg("use_input_for_wn") = false, py::arg("correct_surface_orientation") = false, py::arg("all_mesh") = false, py::arg("binary") = true);
 
         m.def(
-            "boolean_operation", [](const py::object &json, const std::string &output, double stop_quality, int max_its, int stage, int stop_p, double epsilon, double edge_length_r, bool mute_log, bool skip_simplify, bool coarsen, bool manifold_surface, bool use_input_for_wn, bool correct_surface_orientation, bool all_mesh, bool binary) {
+            "boolean_operation", [](const py::object &json, const std::string &output, double stop_quality, int max_its, int stage, int stop_p, double epsilon, double edge_length_r, bool mute_log, bool skip_simplify, bool coarsen, bool manifold_surface, bool use_input_for_wn, bool correct_surface_orientation, bool all_mesh, bool binary)
+            {
                 wildmeshing_binding::init_globals();
 
                 static bool initialized = false;
