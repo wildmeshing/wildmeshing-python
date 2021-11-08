@@ -105,7 +105,9 @@ namespace wildmeshing_binding
             }
         }
 
+#ifdef NEW_ENVELOPE
         params.input_epsr_tags = epsr_tags;
+#endif
 
 #ifdef NEW_ENVELOPE
         if (!MeshIO::load_mesh(params.input_path, input_vertices, input_faces, sf_mesh, input_tags, params.input_epsr_tags))
@@ -122,6 +124,7 @@ namespace wildmeshing_binding
             return false;
         }
 
+#ifdef NEW_ENVELOPE
         if (!params.input_epsr_tags.empty())
         {
             if (params.input_epsr_tags.size() != input_vertices.size())
@@ -130,6 +133,7 @@ namespace wildmeshing_binding
                 return false;
             }
         }
+#endif
 
         return load_mesh_aux();
     }
@@ -186,6 +190,8 @@ namespace wildmeshing_binding
         }
 
         Parameters &params = mesh.params;
+
+#ifdef NEW_ENVELOPE
         params.input_epsr_tags = epsr_tags;
 
         if (!params.input_epsr_tags.empty())
@@ -195,6 +201,7 @@ namespace wildmeshing_binding
                 throw std::invalid_argument("epsr_tags need to be same size as vertices, " + std::to_string(params.input_epsr_tags.size()) + " vs " + std::to_string(input_vertices.size()));
             }
         }
+#endif
 
 #ifdef NEW_ENVELOPE
         MeshIO::load_mesh(input_vertices, input_faces, sf_mesh, input_tags, params.input_epsr_tags);
@@ -318,7 +325,7 @@ namespace wildmeshing_binding
             if (bg_t_id == GEO::MeshCellsAABB::NO_TET)
                 return -1.;
 
-            //compute barycenter
+            // compute barycenter
             std::array<Vector3, 4> vs;
             for (int j = 0; j < 4; j++)
             {
@@ -685,8 +692,7 @@ namespace wildmeshing_binding
                               "load_csg_tree", [](Tetrahedralizer &t, const py::object &csg_tree)
                               {
                                   const std::string tmp = py::str(csg_tree);
-                                  t.boolean_operation(tmp);
-                              },
+                                  t.boolean_operation(tmp); },
                               "loads a csg tree, either from file or json", py::arg("csg_tree"))
 
                           .def(
@@ -706,8 +712,7 @@ namespace wildmeshing_binding
                                   Eigen::MatrixXd tags;
                                   t.get_tet_mesh(smooth_open_boundary, floodfill, manifold_surface, use_input_for_wn, correct_surface_orientation, all_mesh, V, T, tags);
 
-                                  return py::make_tuple(V, T, tags);
-                              },
+                                  return py::make_tuple(V, T, tags); },
                               "gets the output", py::arg("smooth_open_boundary") = false, py::arg("floodfill") = false, py::arg("use_input_for_wn") = false, py::arg("manifold_surface") = false, py::arg("correct_surface_orientation") = false, py::arg("all_mesh") = false)
                           .def(
                               "get_tracked_surfaces", [](Tetrahedralizer &t)
@@ -717,8 +722,7 @@ namespace wildmeshing_binding
                                   Eigen::MatrixXd tags;
                                   t.get_tracked_surfaces(Vt, Ft);
 
-                                  return py::make_tuple(Vt, Ft);
-                              },
+                                  return py::make_tuple(Vt, Ft); },
                               "gets the tracked surfaces")
                           .def(
                               "get_tet_mesh_from_csg", [](Tetrahedralizer &t, const py::object &csg_tree, bool manifold_surface, bool use_input_for_wn, bool correct_surface_orientation)
@@ -734,8 +738,7 @@ namespace wildmeshing_binding
 
                                   t.has_json_csg = false;
 
-                                  return py::make_tuple(V, T, tags);
-                              },
+                                  return py::make_tuple(V, T, tags); },
                               "gets the output from a csg tree", py::arg("csg_tree"), py::arg("manifold_surface") = false, py::arg("use_input_for_wn") = false, py::arg("correct_surface_orientation") = false)
                           .def(
                               "get_stats", [](const Tetrahedralizer &t)
@@ -763,8 +766,7 @@ namespace wildmeshing_binding
                 tetra.tetrahedralize();
                 tetra.save(output, smooth_open_boundary, floodfill, use_input_for_wn, manifold_surface, correct_surface_orientation, all_mesh, binary);
 
-                return true;
-            },
+                return true; },
             "Robust Tetrahedralization, this is an alpha developement version of TetWild. For a stable release refer to the C++ version https://github.com/Yixin-Hu/TetWild",
             py::arg("input"), // "Input surface mesh INPUT in .off/.obj/.stl/.ply format. (string, required)"
             // py::arg("postfix") = "" //"Add postfix into outputs' file name"
@@ -801,8 +803,7 @@ namespace wildmeshing_binding
                 tetra.tetrahedralize();
                 tetra.save(output, false, false, manifold_surface, use_input_for_wn, correct_surface_orientation, all_mesh, binary);
 
-                return true;
-            },
+                return true; },
             "Robust boolean operation, this is an alpha developement version",
             py::arg("json"), // "Input surface mesh INPUT in .off/.obj/.stl/.ply format. (string, required)"
             // py::arg("postfix") = "" //"Add postfix into outputs' file name"
