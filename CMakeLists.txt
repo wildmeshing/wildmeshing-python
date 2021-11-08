@@ -7,7 +7,8 @@ project(WildMeshing)
 set(THIRD_PARTY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
-option(FLOAT_TETWILD_WITH_EXACT_ENVELOPE    "Use exact envelope"        ON)
+# option(FLOAT_TETWILD_WITH_EXACT_ENVELOPE    "Use exact envelope"        ON)
+option(LIBIGL_WITH_PREDICATES        "Use exact predicates"         ON)
 
 
 # Color output
