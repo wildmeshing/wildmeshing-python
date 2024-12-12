@@ -30,7 +30,7 @@ jobs:
             name: Linux
           - os: windows-latest
             name: Windows
-          - os: macos-12
+          - os: macos-13
             name: macOS
     steps:
       - name: Checkout repository
@@ -42,6 +42,8 @@ jobs:
       - name: Setup NMake (Windows)
         if: runner.os == 'Windows'
         uses: ilammy/msvc-dev-cmd@v1
+        with:
+          toolset: 16.XX
 
       - name: Setup Conda
         uses: conda-incubator/setup-miniconda@v3
