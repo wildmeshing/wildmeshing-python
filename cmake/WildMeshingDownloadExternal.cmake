@@ -23,7 +23,6 @@ endfunction()
 
 ################################################################################
 
-if (${CMAKE_VERSION} VERSION_LESS "3.11.0")
 function(wildmeshing_download_triwild)
     wildmeshing_download_project(triwild
         GIT_REPOSITORY  https://github.com/wildmeshing/TriWild
@@ -52,39 +51,3 @@ function(wildmeshing_download_data)
         GIT_TAG        363f8e860673a4e4f68df6465b99e86809c96283
     )
 endfunction()
-
-else()
-    include(FetchContent)
-    function(wildmeshing_download_triwild)
-        FetchContent_Declare(triwild
-            GIT_REPOSITORY  https://github.com/wildmeshing/TriWild
-            GIT_TAG         ac7977c1da9fb25de8c0f7c666055e6d09034686
-            SOURCE_DIR      ${WILDMESHING_EXTERNAL}/triwild
-        )
-    endfunction()
-
-function(wildmeshing_download_tetwild)
-    FetchContent_Declare(tetwild
-            GIT_REPOSITORY  https://github.com/wildmeshing/fTetWild
-            GIT_TAG         5041567cb69a8c8eb928e4932521c94bfcfff833
-            SOURCE_DIR      ${WILDMESHING_EXTERNAL}/tetwild
-        )
-endfunction()
-
-function(wildmeshing_download_pybind11)
-    FetchContent_Declare(pybind11
-            GIT_REPOSITORY https://github.com/pybind/pybind11
-            GIT_TAG        085a29436a8c472caaaf7157aa644b571079bcaa
-            SOURCE_DIR      ${WILDMESHING_EXTERNAL}/pybind11
-        )
-endfunction()
-
-# data
-function(wildmeshing_download_data)
-    FetchContent_Declare(data
-            GIT_REPOSITORY https://github.com/wildmeshing/data
-            GIT_TAG        363f8e860673a4e4f68df6465b99e86809c96283
-            SOURCE_DIR      ${WILDMESHING_EXTERNAL}/data
-        )
-endfunction()    
-endif()
