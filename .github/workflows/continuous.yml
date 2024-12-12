@@ -41,7 +41,7 @@ jobs:
 
       - name: Setup NMake (Windows)
         if: runner.os == 'Windows'
-      - uses: TheMrMilchmann/setup-msvc-dev@v3
+        uses: TheMrMilchmann/setup-msvc-dev@v3
         with:
           arch : x86
           toolset: 14.00
