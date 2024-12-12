@@ -23,17 +23,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04]
-        #, macos-12, windows-latest]
-        config: [Debug]
-        #, Release]
+        os: [ubuntu-22.04, macos-12, windows-latest]
+        config: [Debug, Release]
         include:
           - os: ubuntu-22.04
             name: Linux
-          # - os: windows-latest
-          #   name: Windows
-          # - os: macos-12
-          #   name: macOS
+          - os: windows-latest
+            name: Windows
+          - os: macos-12
+            name: macOS
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -45,7 +43,7 @@ jobs:
         if: runner.os == 'Windows'
         uses: ilammy/msvc-dev-cmd@v1
 
-      - name: Stetup Conda
+      - name: Setup Conda
         uses: conda-incubator/setup-miniconda@v3
         with:
           channels: conda-forge
