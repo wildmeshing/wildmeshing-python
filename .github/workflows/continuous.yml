@@ -23,7 +23,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, macOS-13, windows-latest]
+        os: [ubuntu-22.04, macOS-13, windows-19]
         config: [Debug, Release]
         include:
           - os: ubuntu-22.04
