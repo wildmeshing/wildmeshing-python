@@ -38,16 +38,26 @@ include(WildMeshingDependencies)
 
 # triwild
 wildmeshing_download_triwild()
+
+if (${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.11.0")
+	FetchContent_MakeAvailable(triwild)
+endif()
 add_subdirectory(${THIRD_PARTY_DIR}/triwild)
 
 
 # tetwild
 wildmeshing_download_tetwild()
+if (${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.11.0")
+	FetchContent_MakeAvailable(tetwild)
+endif()
 add_subdirectory(${THIRD_PARTY_DIR}/tetwild)
 
 
 # pybind11
 wildmeshing_download_pybind11()
+if (${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.11.0")
+	FetchContent_MakeAvailable(pybind11)
+endif()
 add_subdirectory(${THIRD_PARTY_DIR}/pybind11)
 
 
