@@ -24,7 +24,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-22.04, macOS-13, windows-2019]
-        config: [Release]
+        config: [Debug, Release]
         include:
           - os: ubuntu-22.04
             name: Linux
