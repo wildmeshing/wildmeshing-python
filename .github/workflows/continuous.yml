@@ -12,6 +12,10 @@ env:
   CTEST_OUTPUT_ON_FAILURE: ON
   CTEST_PARALLEL_LEVEL: 2
 
+defaults:
+  run:
+    shell: bash -el {0}
+
 jobs:
   Build:
     name: ${{ matrix.name }} (${{ matrix.config }})
@@ -19,18 +23,18 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-18.04, macos-latest, windows-2019]
+        os: [ubuntu-22.04, macOS-13, windows-2019]
         config: [Debug, Release]
         include:
-          - os: ubuntu-18.04
+          - os: ubuntu-22.04
             name: Linux
           - os: windows-2019
             name: Windows
-          - os: macos-latest
+          - os: macos-13
             name: macOS
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v1
+        uses: actions/checkout@v4
         with:
           fetch-depth: 10
           submodules: "recursive"
@@ -39,14 +43,16 @@ jobs:
         if: runner.os == 'Windows'
         uses: ilammy/msvc-dev-cmd@v1
 
-      - name: Stetup Conda
-        uses: s-weigand/setup-conda@v1
+      - name: Setup Conda
+        uses: conda-incubator/setup-miniconda@v3
         with:
-          conda-channels: anaconda, conda-forge
-          python-version: 3.6
+          channels: conda-forge
+          python-version: 3.7
+          channel-priority: true
+          activate-environment: test-env
 
       - name: Install Dependencies
-        run: conda install numpy svgwrite -y
+        run: conda install numpy svgwrite cmake git -y
 
       - name: Install Dependencies  (Windows)
         if: runner.os == 'Windows'
@@ -56,9 +62,13 @@ jobs:
         if: runner.os == 'Windows'
         run: echo "CMAKE_GENERATOR=NMake Makefiles" >> $GITHUB_ENV
 
+      - name: Configure git
+        run: git config --global http.version HTTP/1.1
+
       - name: Build (Debug)
         if: matrix.config == 'Debug'
-        run: python setup.py build --debug install
+        run: |
+          python setup.py build --debug install
 
       - name: Build (Release)
         if: matrix.config == 'Release'
