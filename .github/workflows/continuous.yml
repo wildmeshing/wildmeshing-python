@@ -24,6 +24,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-22.04, macOS-13, windows-2019]
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
         config: [Debug, Release]
         include:
           - os: ubuntu-22.04
@@ -47,7 +48,7 @@ jobs:
         uses: conda-incubator/setup-miniconda@v3
         with:
           channels: conda-forge
-          python-version: 3.7
+          python-version: ${{ matrix.python-version }}
           channel-priority: true
           activate-environment: test-env
 
