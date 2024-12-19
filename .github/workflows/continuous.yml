@@ -68,12 +68,11 @@ jobs:
 
       - name: Build (Debug)
         if: matrix.config == 'Debug'
-        run: |
-          python setup.py build --debug install
+        run: python -m pip install -v --debug .
 
       - name: Build (Release)
         if: matrix.config == 'Release'
-        run: python setup.py build install
+        run: python -m pip install -v .
 
       - name: Fast Tests
         run: |
