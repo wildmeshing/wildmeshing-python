@@ -19,7 +19,7 @@
 #include <memory>
 
 #ifdef FLOAT_TETWILD_USE_TBB
-#include <tbb/task_scheduler_init.h>
+#include <oneapi/tbb.h>
 #include <thread>
 #endif
 
@@ -61,7 +61,7 @@ namespace wildmeshing_binding
         num_threads = std::min(max_threads, num_threads);
         // params.num_threads = num_threads;
         std::cout << "TBB threads " << num_threads << std::endl;
-        tbb::task_scheduler_init scheduler(num_threads, stack_size);
+        //tbb::task_scheduler_init scheduler(num_threads, stack_size);
 #endif
         set_num_threads(num_threads);
     }
